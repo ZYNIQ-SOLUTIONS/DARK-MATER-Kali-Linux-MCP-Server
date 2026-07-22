@@ -1,0 +1,30 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "net.scan_udp",
+    "description":  "UDP port scan using nmap",
+    "type":  "object",
+    "properties":  {
+                       "ports":  {
+                                     "default":  "top-100",
+                                     "pattern":  "^[0-9,\\-]*$",
+                                     "description":  "UDP ports (default top 100)",
+                                     "type":  "string"
+                                 },
+                       "timeout":  {
+                                       "default":  120,
+                                       "maximum":  600,
+                                       "description":  "Scan timeout in seconds",
+                                       "type":  "integer",
+                                       "minimum":  10
+                                   },
+                       "target":  {
+                                      "pattern":  "^[0-9A-Za-z.:/_-]+$",
+                                      "description":  "Target IP, hostname or CIDR",
+                                      "type":  "string"
+                                  }
+                   },
+    "required":  [
+                     "target"
+                 ],
+    "additionalProperties":  false
+}

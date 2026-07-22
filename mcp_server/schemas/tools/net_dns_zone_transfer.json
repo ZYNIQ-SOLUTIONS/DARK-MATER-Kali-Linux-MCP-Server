@@ -1,0 +1,20 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "net.dns_zone_transfer",
+    "description":  "Attempt a DNS zone transfer (AXFR) against a nameserver",
+    "type":  "object",
+    "properties":  {
+                       "nameserver":  {
+                                          "type":  "string",
+                                          "description":  "Nameserver to query (optional, auto-detected if blank)"
+                                      },
+                       "domain":  {
+                                      "type":  "string",
+                                      "description":  "Target domain"
+                                  }
+                   },
+    "required":  [
+                     "domain"
+                 ],
+    "additionalProperties":  false
+}

@@ -1,0 +1,55 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "brute.hydra",
+    "description":  "Password brute-force attack using Hydra",
+    "type":  "object",
+    "properties":  {
+                       "port":  {
+                                    "description":  "Target port (optional, uses protocol default)",
+                                    "maximum":  65535,
+                                    "type":  "integer",
+                                    "minimum":  1
+                                },
+                       "service":  {
+                                       "enum":  [
+                                                    "ssh",
+                                                    "ftp",
+                                                    "http-get",
+                                                    "http-post-form",
+                                                    "smb",
+                                                    "rdp",
+                                                    "telnet",
+                                                    "smtp"
+                                                ],
+                                       "description":  "Service protocol to attack",
+                                       "type":  "string"
+                                   },
+                       "threads":  {
+                                       "default":  16,
+                                       "maximum":  64,
+                                       "description":  "Parallel threads",
+                                       "type":  "integer",
+                                       "minimum":  1
+                                   },
+                       "userlist":  {
+                                        "description":  "Path to username wordlist",
+                                        "default":  "/usr/share/wordlists/metasploit/unix_users.txt",
+                                        "type":  "string"
+                                    },
+                       "passlist":  {
+                                        "description":  "Path to password wordlist",
+                                        "default":  "/usr/share/wordlists/rockyou.txt",
+                                        "type":  "string"
+                                    },
+                       "target":  {
+                                      "pattern":  "^[0-9A-Za-z.:/_-]+$",
+                                      "description":  "Target IP or hostname",
+                                      "type":  "string"
+                                  }
+                   },
+    "required":  [
+                     "target",
+                     "service"
+                 ],
+    "additionalProperties":  false
+}

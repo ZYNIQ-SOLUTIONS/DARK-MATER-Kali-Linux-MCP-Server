@@ -38,7 +38,7 @@ class DashboardCapabilities(BaseModel):
     """Dashboard capabilities and feature set."""
     version: str = "2.0.0"
     features: Dict[str, bool]
-    endpoints: List[Dict[str, str]]
+    endpoints: List[Dict[str, Any]]
     websocket_support: bool = True
     real_time_updates: bool = True
 

@@ -1,0 +1,27 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "enum.smb",
+    "description":  "SMB enumeration using enum4linux and smbclient",
+    "type":  "object",
+    "properties":  {
+                       "username":  {
+                                        "description":  "Optional username for authenticated enumeration",
+                                        "default":  "",
+                                        "type":  "string"
+                                    },
+                       "target":  {
+                                      "pattern":  "^[0-9A-Za-z.:/_-]+$",
+                                      "description":  "Target IP or hostname",
+                                      "type":  "string"
+                                  },
+                       "password":  {
+                                        "description":  "Optional password",
+                                        "default":  "",
+                                        "type":  "string"
+                                    }
+                   },
+    "required":  [
+                     "target"
+                 ],
+    "additionalProperties":  false
+}

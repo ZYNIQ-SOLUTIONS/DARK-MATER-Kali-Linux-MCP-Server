@@ -1,0 +1,35 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "net.dns_lookup",
+    "description":  "DNS lookup - query for A, AAAA, MX, NS, TXT records",
+    "type":  "object",
+    "properties":  {
+                       "server":  {
+                                      "type":  "string",
+                                      "description":  "Custom DNS server to query (optional)"
+                                  },
+                       "target":  {
+                                      "type":  "string",
+                                      "description":  "Domain name to query"
+                                  },
+                       "record_type":  {
+                                           "enum":  [
+                                                        "A",
+                                                        "AAAA",
+                                                        "MX",
+                                                        "NS",
+                                                        "TXT",
+                                                        "CNAME",
+                                                        "SOA",
+                                                        "ANY"
+                                                    ],
+                                           "default":  "A",
+                                           "description":  "DNS record type",
+                                           "type":  "string"
+                                       }
+                   },
+    "required":  [
+                     "target"
+                 ],
+    "additionalProperties":  false
+}

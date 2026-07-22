@@ -1,0 +1,21 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "net.arp_scan",
+    "description":  "ARP scan to discover live hosts on a local network segment",
+    "type":  "object",
+    "properties":  {
+                       "interface":  {
+                                         "type":  "string",
+                                         "description":  "Network interface to use (optional)"
+                                     },
+                       "network":  {
+                                       "pattern":  "^[0-9.:/_-]+$",
+                                       "description":  "Network CIDR (e.g. 192.168.1.0/24)",
+                                       "type":  "string"
+                                   }
+                   },
+    "required":  [
+                     "network"
+                 ],
+    "additionalProperties":  false
+}

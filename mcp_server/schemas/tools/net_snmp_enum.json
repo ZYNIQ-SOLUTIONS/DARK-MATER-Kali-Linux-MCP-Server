@@ -1,0 +1,31 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "net.snmp_enum",
+    "description":  "SNMP enumeration of device information",
+    "type":  "object",
+    "properties":  {
+                       "community":  {
+                                         "description":  "SNMP community string",
+                                         "default":  "public",
+                                         "type":  "string"
+                                     },
+                       "target":  {
+                                      "pattern":  "^[0-9A-Za-z.:/_-]+$",
+                                      "description":  "Target IP or hostname",
+                                      "type":  "string"
+                                  },
+                       "version":  {
+                                       "enum":  [
+                                                    "1",
+                                                    "2c"
+                                                ],
+                                       "default":  "2c",
+                                       "description":  "SNMP version",
+                                       "type":  "string"
+                                   }
+                   },
+    "required":  [
+                     "target"
+                 ],
+    "additionalProperties":  false
+}

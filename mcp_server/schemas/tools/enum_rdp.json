@@ -1,0 +1,24 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "enum.rdp",
+    "description":  "RDP service detection and security enumeration via nmap",
+    "type":  "object",
+    "properties":  {
+                       "target":  {
+                                      "pattern":  "^[0-9A-Za-z.:/_-]+$",
+                                      "description":  "Target IP or hostname",
+                                      "type":  "string"
+                                  },
+                       "port":  {
+                                    "default":  3389,
+                                    "maximum":  65535,
+                                    "description":  "RDP port",
+                                    "type":  "integer",
+                                    "minimum":  1
+                                }
+                   },
+    "required":  [
+                     "target"
+                 ],
+    "additionalProperties":  false
+}

@@ -1,0 +1,24 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "enum.ssh",
+    "description":  "SSH service enumeration and banner grab using ssh-audit",
+    "type":  "object",
+    "properties":  {
+                       "target":  {
+                                      "pattern":  "^[0-9A-Za-z.:/_-]+$",
+                                      "description":  "Target IP or hostname",
+                                      "type":  "string"
+                                  },
+                       "port":  {
+                                    "default":  22,
+                                    "maximum":  65535,
+                                    "description":  "SSH port",
+                                    "type":  "integer",
+                                    "minimum":  1
+                                }
+                   },
+    "required":  [
+                     "target"
+                 ],
+    "additionalProperties":  false
+}

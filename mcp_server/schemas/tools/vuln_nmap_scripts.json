@@ -1,0 +1,27 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "vuln.nmap_scripts",
+    "description":  "Run nmap NSE vulnerability detection scripts against a target",
+    "type":  "object",
+    "properties":  {
+                       "ports":  {
+                                     "pattern":  "^[0-9,\\-]*$",
+                                     "description":  "Port range to scan",
+                                     "type":  "string"
+                                 },
+                       "target":  {
+                                      "pattern":  "^[0-9A-Za-z.:/_-]+$",
+                                      "description":  "Target IP, hostname or CIDR",
+                                      "type":  "string"
+                                  },
+                       "scripts":  {
+                                       "description":  "NSE script category or name (e.g. \u0027vuln\u0027, \u0027exploit\u0027, \u0027discovery\u0027)",
+                                       "default":  "vuln",
+                                       "type":  "string"
+                                   }
+                   },
+    "required":  [
+                     "target"
+                 ],
+    "additionalProperties":  false
+}

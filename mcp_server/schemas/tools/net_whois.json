@@ -1,0 +1,17 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "net.whois",
+    "description":  "WHOIS lookup for a domain or IP address",
+    "type":  "object",
+    "properties":  {
+                       "target":  {
+                                      "pattern":  "^[0-9A-Za-z.:/_-]+$",
+                                      "description":  "Domain name or IP address",
+                                      "type":  "string"
+                                  }
+                   },
+    "required":  [
+                     "target"
+                 ],
+    "additionalProperties":  false
+}

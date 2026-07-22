@@ -1,0 +1,26 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "vuln.searchsploit",
+    "description":  "Search Exploit-DB via searchsploit for known exploits",
+    "type":  "object",
+    "properties":  {
+                       "query":  {
+                                     "type":  "string",
+                                     "description":  "Search query (e.g. service name and version)"
+                                 },
+                       "type":  {
+                                    "enum":  [
+                                                 "exploits",
+                                                 "shellcodes",
+                                                 "papers"
+                                             ],
+                                    "default":  "exploits",
+                                    "description":  "Result type to return",
+                                    "type":  "string"
+                                }
+                   },
+    "required":  [
+                     "query"
+                 ],
+    "additionalProperties":  false
+}

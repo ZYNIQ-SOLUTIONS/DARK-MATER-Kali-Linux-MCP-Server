@@ -1,0 +1,22 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "enum.http_headers",
+    "description":  "Fetch and analyse HTTP/HTTPS response headers for security misconfigurations",
+    "type":  "object",
+    "properties":  {
+                       "target":  {
+                                      "pattern":  "^https?://[a-zA-Z0-9._-]+.*$",
+                                      "description":  "Target URL",
+                                      "type":  "string"
+                                  },
+                       "follow_redirects":  {
+                                                "description":  "Follow HTTP redirects",
+                                                "default":  true,
+                                                "type":  "boolean"
+                                            }
+                   },
+    "required":  [
+                     "target"
+                 ],
+    "additionalProperties":  false
+}

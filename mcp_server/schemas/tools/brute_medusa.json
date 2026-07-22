@@ -1,0 +1,46 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "brute.medusa",
+    "description":  "Parallel network login brute-force using Medusa",
+    "type":  "object",
+    "properties":  {
+                       "username":  {
+                                        "type":  "string",
+                                        "description":  "Single username to test"
+                                    },
+                       "passlist":  {
+                                        "description":  "Path to password wordlist",
+                                        "default":  "/usr/share/wordlists/rockyou.txt",
+                                        "type":  "string"
+                                    },
+                       "threads":  {
+                                       "default":  8,
+                                       "maximum":  128,
+                                       "description":  "Parallel threads",
+                                       "type":  "integer",
+                                       "minimum":  1
+                                   },
+                       "target":  {
+                                      "pattern":  "^[0-9A-Za-z.:/_-]+$",
+                                      "description":  "Target IP or hostname",
+                                      "type":  "string"
+                                  },
+                       "service":  {
+                                       "enum":  [
+                                                    "ssh",
+                                                    "ftp",
+                                                    "telnet",
+                                                    "smb",
+                                                    "http"
+                                                ],
+                                       "description":  "Service module",
+                                       "type":  "string"
+                                   }
+                   },
+    "required":  [
+                     "target",
+                     "service",
+                     "username"
+                 ],
+    "additionalProperties":  false
+}

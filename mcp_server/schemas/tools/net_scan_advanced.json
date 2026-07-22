@@ -1,0 +1,43 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "net.scan_advanced",
+    "description":  "Advanced nmap scan with OS detection, version fingerprinting and script engine",
+    "type":  "object",
+    "properties":  {
+                       "ports":  {
+                                     "pattern":  "^[0-9,\\-]*$",
+                                     "description":  "Port specification",
+                                     "type":  "string"
+                                 },
+                       "timing":  {
+                                      "default":  3,
+                                      "maximum":  5,
+                                      "description":  "Timing template (0-5)",
+                                      "type":  "integer",
+                                      "minimum":  0
+                                  },
+                       "scripts":  {
+                                       "type":  "string",
+                                       "description":  "NSE scripts to run (e.g. \u0027default,safe\u0027)"
+                                   },
+                       "os_detect":  {
+                                         "description":  "Enable OS detection",
+                                         "default":  false,
+                                         "type":  "boolean"
+                                     },
+                       "service_version":  {
+                                               "description":  "Detect service versions",
+                                               "default":  true,
+                                               "type":  "boolean"
+                                           },
+                       "target":  {
+                                      "pattern":  "^[0-9A-Za-z.:/_-]+$",
+                                      "description":  "Target IP, hostname or CIDR",
+                                      "type":  "string"
+                                  }
+                   },
+    "required":  [
+                     "target"
+                 ],
+    "additionalProperties":  false
+}

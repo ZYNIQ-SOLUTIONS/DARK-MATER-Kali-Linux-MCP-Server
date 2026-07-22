@@ -1,0 +1,41 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "web.gobuster",
+    "description":  "Web directory and file brute-forcing using Gobuster",
+    "type":  "object",
+    "properties":  {
+                       "threads":  {
+                                       "default":  10,
+                                       "maximum":  50,
+                                       "description":  "Number of concurrent threads",
+                                       "type":  "integer",
+                                       "minimum":  1
+                                   },
+                       "extensions":  {
+                                          "description":  "File extensions to test (e.g. \u0027php,html,js\u0027)",
+                                          "default":  "",
+                                          "type":  "string"
+                                      },
+                       "wordlist":  {
+                                        "description":  "Wordlist path",
+                                        "default":  "/usr/share/wordlists/dirb/common.txt",
+                                        "type":  "string"
+                                    },
+                       "target":  {
+                                      "pattern":  "^https?://[a-zA-Z0-9._-]+.*$",
+                                      "description":  "Target URL",
+                                      "type":  "string"
+                                  },
+                       "timeout":  {
+                                       "default":  120,
+                                       "maximum":  600,
+                                       "description":  "Scan timeout in seconds",
+                                       "type":  "integer",
+                                       "minimum":  10
+                                   }
+                   },
+    "required":  [
+                     "target"
+                 ],
+    "additionalProperties":  false
+}

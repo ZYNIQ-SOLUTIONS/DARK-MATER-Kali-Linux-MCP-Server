@@ -1,0 +1,24 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "net.ping_sweep",
+    "description":  "ICMP ping sweep across a network range",
+    "type":  "object",
+    "properties":  {
+                       "timeout":  {
+                                       "default":  5,
+                                       "maximum":  60,
+                                       "description":  "Per-host timeout in seconds",
+                                       "type":  "integer",
+                                       "minimum":  1
+                                   },
+                       "network":  {
+                                       "pattern":  "^[0-9.:/_-]+$",
+                                       "description":  "Network CIDR to sweep (e.g. 192.168.1.0/24)",
+                                       "type":  "string"
+                                   }
+                   },
+    "required":  [
+                     "network"
+                 ],
+    "additionalProperties":  false
+}

@@ -1,0 +1,31 @@
+{
+    "$schema":  "http://json-schema.org/draft-07/schema#",
+    "title":  "net.banner_grab",
+    "description":  "Grab service banners from open ports using netcat",
+    "type":  "object",
+    "properties":  {
+                       "port":  {
+                                    "description":  "Port to connect to",
+                                    "maximum":  65535,
+                                    "type":  "integer",
+                                    "minimum":  1
+                                },
+                       "timeout":  {
+                                       "default":  5,
+                                       "maximum":  30,
+                                       "description":  "Connection timeout in seconds",
+                                       "type":  "integer",
+                                       "minimum":  1
+                                   },
+                       "target":  {
+                                      "pattern":  "^[0-9A-Za-z.:/_-]+$",
+                                      "description":  "Target IP or hostname",
+                                      "type":  "string"
+                                  }
+                   },
+    "required":  [
+                     "target",
+                     "port"
+                 ],
+    "additionalProperties":  false
+}

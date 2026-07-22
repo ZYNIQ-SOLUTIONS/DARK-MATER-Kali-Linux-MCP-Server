@@ -12,6 +12,7 @@ import subprocess
 import time
 import signal
 import requests
+import argparse
 from pathlib import Path
 from datetime import datetime
 
@@ -796,11 +797,84 @@ class DarkMaterCLI:
 
 def main():
     """Main function"""
+    parser = argparse.ArgumentParser(description="DARK MATER Kali MCP Server CLI")
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # Start command
+    start_parser = subparsers.add_parser("start", help="Start the server")
+    start_parser.add_argument("--interactive", action="store_true", help="Start in interactive mode")
+    start_parser.add_argument("--ngrok", action="store_true", help="Start with ngrok tunnel")
+    start_parser.add_argument("--ngrok-token", type=str, help="Ngrok auth token")
+    start_parser.add_argument("--ngrok-domain", type=str, help="Ngrok custom domain")
+
+    # Stop command
+    stop_parser = subparsers.add_parser("stop", help="Stop the server")
+
+    # Restart command
+    restart_parser = subparsers.add_parser("restart", help="Restart the server")
+
+    # Status command
+    status_parser = subparsers.add_parser("status", help="View server status")
+
+    # Logs command
+    logs_parser = subparsers.add_parser("logs", help="View server logs")
+    logs_parser.add_argument("-f", "--follow", action="store_true", help="Follow logs")
+    logs_parser.add_argument("-n", "--lines", type=int, default=50, help="Number of lines to show")
+
+    # Enroll command
+    enroll_parser = subparsers.add_parser("enroll", help="Manage enrollment")
+
+    # Backwards compatibility for the old 'start-server' command
     if len(sys.argv) > 1 and sys.argv[1] == "start-server":
-        cli = DarkMaterCLI()
-        cli.run()
+        sys.argv = [sys.argv[0], "start", "--interactive"]
+
+    args = parser.parse_args()
+
+    cli = DarkMaterCLI()
+    
+    if args.command == "start":
+        if args.interactive:
+            cli.run()
+        else:
+            cli.setup_signal_handlers()
+            cli.check_root()
+            cli.check_installation()
+            token = args.ngrok_token
+            domain = args.ngrok_domain
+            if args.ngrok and not token:
+                print("Error: --ngrok requires --ngrok-token")
+                sys.exit(1)
+            cli.start_server_process(token, domain)
+            
+    elif args.command == "stop":
+        cli.stop_server()
+        
+    elif args.command == "restart":
+        cli.restart_server()
+        
+    elif args.command == "status":
+        cli.test_health_detailed()
+        cli.check_ngrok_status()
+        
+    elif args.command == "logs":
+        log_file = "/var/log/mcp-kali-server.log"
+        if not Path(log_file).exists():
+            print("Log file not found.")
+            sys.exit(1)
+        
+        if args.follow:
+            try:
+                subprocess.run(['tail', '-f', log_file])
+            except KeyboardInterrupt:
+                pass
+        else:
+            subprocess.run(['tail', f'-{args.lines}', log_file])
+            
+    elif args.command == "enroll":
+        cli.enrollment_manager()
+        
     else:
-        print("Usage: dark-mater_kali-mcp start-server")
+        parser.print_help()
         sys.exit(1)
 
 if __name__ == "__main__":
