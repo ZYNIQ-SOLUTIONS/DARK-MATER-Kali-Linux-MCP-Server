@@ -21,6 +21,13 @@ services:
       - mcp-config:/etc/mcp-kali
     restart: unless-stopped
 
+  mock-target:
+    image: nginx:alpine
+    container_name: mcp-mock-target
+    ports:
+      - "8088:80"
+    restart: unless-stopped
+
 volumes:
   mcp-data:
   mcp-config:

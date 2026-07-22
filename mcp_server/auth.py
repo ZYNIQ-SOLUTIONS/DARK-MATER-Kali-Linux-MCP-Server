@@ -9,7 +9,7 @@ import string
 import jwt
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List
 import logging
 
 from fastapi import HTTPException, status, Request, Depends
@@ -42,6 +42,9 @@ class ServerCredentials(BaseModel):
     api_key: str
     label: str
     created: datetime
+    tenant_id: str = "default"
+    scopes: List[str] = ["admin:all"]
+    allowed_cidrs: Optional[List[str]] = None
 
 class EnrollmentRequest(BaseModel):
     """Enrollment request model."""

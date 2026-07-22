@@ -325,6 +325,24 @@ async def tools_call_endpoint(
             detail="Tool execution failed due to server error"
         )
 
+@app.post("/mcp")
+async def openmcp_jsonrpc_endpoint(
+    request: Dict[str, Any],
+    server_creds: ServerCredentials = Depends(require_api_key)
+):
+    """
+    OpenMCP Standard JSON-RPC 2.0 endpoint for native MCP client compatibility.
+    """
+    from .mcp_jsonrpc import handle_jsonrpc_request
+    try:
+        return handle_jsonrpc_request(server_creds.server_id, request)
+    except Exception as e:
+        logger.error(f"OpenMCP JSON-RPC error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="JSON-RPC processing failed"
+        )
+
 @app.post("/tools/jobs")
 async def submit_tool_job(
     request: ToolCallRequest,
@@ -385,6 +403,26 @@ async def get_job_status(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Job status retrieval failed"
         )
+
+@app.get("/tools/jobs/{job_id}/stream")
+async def stream_job_sse(
+    job_id: str,
+    server_creds: ServerCredentials = Depends(require_api_key)
+):
+    """
+    Stream live Server-Sent Events (SSE) status for an async job.
+    """
+    from fastapi.responses import StreamingResponse
+    job = job_manager.get_job(job_id)
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job not found: {job_id}"
+        )
+    return StreamingResponse(
+        job_manager.stream_job(job_id),
+        media_type="text/event-stream"
+    )
 
 # AI Analysis endpoints
 @app.post("/tools/jobs/{job_id}/analyze")

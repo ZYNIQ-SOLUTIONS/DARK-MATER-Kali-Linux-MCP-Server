@@ -609,6 +609,45 @@ curl -X POST "http://SERVER_IP:5000/tools/jobs" \
 # Check job status
 curl -H "Authorization: Bearer YOUR_API_KEY" \
   "http://SERVER_IP:5000/tools/jobs/YOUR_JOB_ID"
+
+# Stream live SSE events
+curl -N -H "Authorization: Bearer YOUR_API_KEY" \
+  "http://SERVER_IP:5000/tools/jobs/YOUR_JOB_ID/stream"
+```
+
+### OpenMCP Standard JSON-RPC 2.0 (`/mcp`)
+
+The server implements full JSON-RPC 2.0 OpenMCP standard support.
+
+```bash
+# Initialize OpenMCP session
+curl -X POST "http://SERVER_IP:5000/mcp" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "method": "initialize", "id": 1}'
+
+# List tools via OpenMCP standard
+curl -X POST "http://SERVER_IP:5000/mcp" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "method": "tools/list", "id": 2}'
+```
+
+### Python Client SDK
+
+```python
+from darkmater_mcp import DarkMaterClient
+
+client = DarkMaterClient("http://localhost:5000", api_key="YOUR_API_KEY")
+
+# Check server health
+print(client.health())
+
+# List tools
+tools = client.list_tools()
+
+# Execute scan
+result = client.call_tool("net.scan_basic", {"target": "127.0.0.1", "fast": True})
 ```
 
 ### Execute Network Scan

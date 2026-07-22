@@ -151,25 +151,30 @@ def ip_in_cidrs(ip: ipaddress.IPv4Address, cidrs: List[str]) -> bool:
         logger.error(f"Error checking IP against CIDRs: {e}")
         return False
 
-def in_scope(target: str) -> bool:
+def in_scope(target: str, custom_cidrs: Optional[List[str]] = None) -> bool:
     """
     Check if target is within allowed scope.
     
     Args:
         target: Target IP address, hostname, or CIDR range
+        custom_cidrs: Optional list of tenant-specific CIDR ranges overriding server defaults
         
     Returns:
         True if target is in scope, False otherwise
     """
     try:
-        config = load_scope_config()
+        if custom_cidrs is not None:
+            allowed_cidrs = custom_cidrs
+        else:
+            config = load_scope_config()
+            allowed_cidrs = config.allowed_cidrs
         
         # Handle CIDR ranges in target
         if '/' in target:
             try:
                 target_network = ipaddress.IPv4Network(target, strict=False)
                 # Check if the entire target network is within allowed scope
-                for cidr_str in config.allowed_cidrs:
+                for cidr_str in allowed_cidrs:
                     try:
                         allowed_network = ipaddress.IPv4Network(cidr_str, strict=False)
                         if target_network.subnet_of(allowed_network):
@@ -196,7 +201,7 @@ def in_scope(target: str) -> bool:
             return False
             
         # Check against configured CIDRs
-        return ip_in_cidrs(ip, config.allowed_cidrs)
+        return ip_in_cidrs(ip, allowed_cidrs)
         
     except Exception as e:
         logger.error(f"Error checking scope for target {target}: {e}")
