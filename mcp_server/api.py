@@ -21,7 +21,8 @@ from .auth import (
     require_api_key, enroll_server, EnrollmentRequest, EnrollmentResponse, 
     ServerCredentials, TokenRequest, TokenResponse, generate_jwt_token
 )
-from .tools import list_tools, call_tool
+from .tools import list_tools, call_tool, call_tool_async
+from .jobs import job_manager
 from .artifacts import list_artifacts, read_artifact
 from .memory import search_memory, get_observation_stats
 from .scope import get_scope_info
@@ -120,7 +121,7 @@ async def metrics_and_audit_middleware(request: Request, call_next):
             client_ip=client_ip,
             details={"status_code": e.status_code, "detail": e.detail}
         )
-        raise
+        return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
     
     # Process request
     response = await call_next(request)
@@ -322,6 +323,67 @@ async def tools_call_endpoint(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Tool execution failed due to server error"
+        )
+
+@app.post("/tools/jobs")
+async def submit_tool_job(
+    request: ToolCallRequest,
+    server_creds: ServerCredentials = Depends(require_api_key)
+):
+    """
+    Submit a tool for asynchronous background execution.
+    
+    Returns a job_id immediately, which can be polled for status.
+    """
+    try:
+        logger.info(f"Async tool job request: {request.name} from server {server_creds.server_id}")
+        
+        result = call_tool_async(server_creds.server_id, request.name, request.arguments)
+        
+        if result.get("status") == "queued":
+            return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content=result)
+        else:
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=result)
+            
+    except Exception as e:
+        logger.error(f"Async tool submission error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Tool submission failed due to server error"
+        )
+
+@app.get("/tools/jobs/{job_id}")
+async def get_job_status(
+    job_id: str,
+    server_creds: ServerCredentials = Depends(require_api_key)
+):
+    """
+    Poll the status of an asynchronous background job.
+    """
+    try:
+        job = job_manager.get_job(job_id)
+        if not job:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Job not found: {job_id}"
+            )
+            
+        # Optional: ensure the server requesting it owns the job
+        if job.get("server_id") != server_creds.server_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to view this job"
+            )
+            
+        return job
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Job status retrieval error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Job status retrieval failed"
         )
 
 # AI Analysis endpoints
@@ -776,16 +838,8 @@ async def artifacts_read_endpoint(
                 detail="Artifact not found"
             )
         
-        # Return appropriate response based on content type
-        content_type = artifact.get("content_type", "text/plain")
-        
-        if content_type == "application/json":
-            return artifact["content"]
-        else:
-            return PlainTextResponse(
-                content=artifact["content"],
-                media_type=content_type
-            )
+        # Return the artifact metadata and content wrapped in a JSON response
+        return artifact
         
     except HTTPException:
         raise
@@ -916,6 +970,25 @@ async def get_metrics_endpoint(server_creds: ServerCredentials = Depends(require
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve metrics"
+        )
+
+@app.get("/metrics", response_class=PlainTextResponse)
+async def get_prometheus_metrics_endpoint():
+    """
+    Get Prometheus-compatible server metrics.
+    
+    This endpoint is designed to be scraped by Prometheus or similar monitoring tools.
+    It intentionally does NOT require an API key to allow local scrapers to work easily,
+    but in production, it should be restricted via network policies.
+    """
+    try:
+        content = metrics_collector.get_prometheus_metrics()
+        return PlainTextResponse(content=content)
+    except Exception as e:
+        logger.error(f"Prometheus metrics endpoint error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate Prometheus metrics"
         )
 
 @app.get("/api/v2/audit/events")

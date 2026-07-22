@@ -1,0 +1,26 @@
+services:
+  kali-api:
+    build: .
+    container_name: mcp-kali-api
+    ports:
+      - "5000:5000"
+    # privileged + raw socket caps needed for nmap -sU, arp-scan, masscan
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - OLLAMA_URL=http://host.docker.internal:11434/
+      - OLLAMA_MODEL=gemma4:e4b
+      - MCP_DEV_MODE=true
+      - MCP_BIND=0.0.0.0:5000
+      - MCP_IN_DOCKER=true
+      - MCP_ALLOW_ALL_TARGETS=true
+    volumes:
+      - mcp-data:/var/lib/mcp
+      - mcp-config:/etc/mcp-kali
+    restart: unless-stopped
+
+volumes:
+  mcp-data:
+  mcp-config:

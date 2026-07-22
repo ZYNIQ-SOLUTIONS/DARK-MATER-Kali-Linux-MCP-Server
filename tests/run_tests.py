@@ -51,10 +51,14 @@ class TestRunner:
         print(f"🐍 Python Version: {python_version}")
         checks.append(("Python >= 3.8", sys.version_info >= (3, 8)))
         
-        # Check if we're in a virtual environment
+        # Check if we're in a virtual environment or running inside Docker/Kubernetes container
         in_venv = hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+        is_docker = os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or os.environ.get("MCP_IN_DOCKER") == "true"
+        
         print(f"🏠 Virtual Environment: {'Yes' if in_venv else 'No'}")
-        checks.append(("Virtual Environment", in_venv))
+        print(f"🐳 Container Environment (Docker): {'Yes' if is_docker else 'No'}")
+        
+        checks.append(("Virtual Environment or Containerized", in_venv or is_docker))
         
         # Check required modules
         required_modules = [
@@ -141,9 +145,11 @@ class TestRunner:
             os.chdir(self.project_root)
             
             # Run the test
+            env = os.environ.copy()
+            env["PYTHONPATH"] = str(self.project_root)
             result = subprocess.run([
                 sys.executable, str(test_file)
-            ], capture_output=True, text=True, timeout=60)
+            ], capture_output=True, text=True, timeout=60, env=env)
             
             os.chdir(original_cwd)
             

@@ -263,6 +263,73 @@ class MetricsCollector:
             "system": self.get_system_metrics(),
             "config": self.config.model_dump()
         }
+        
+    def get_prometheus_metrics(self) -> str:
+        """Export metrics in Prometheus exposition format."""
+        lines = []
+        
+        # 1. Request metrics
+        lines.append("# HELP mcp_requests_total Total number of API requests")
+        lines.append("# TYPE mcp_requests_total counter")
+        for key, count in self._request_counts.items():
+            parts = key.split('_', 2)
+            if len(parts) >= 3:
+                method, endpoint, status = parts[0], parts[1], parts[2]
+                lines.append(f'mcp_requests_total{{method="{method}",endpoint="{endpoint}",status="{status}"}} {count}')
+                
+        lines.append("# HELP mcp_errors_total Total number of API errors")
+        lines.append("# TYPE mcp_errors_total counter")
+        for key, count in self._error_counts.items():
+            parts = key.split('_', 2)
+            if len(parts) >= 2:
+                method, endpoint = parts[0], parts[1]
+                lines.append(f'mcp_errors_total{{method="{method}",endpoint="{endpoint}"}} {count}')
+
+        # 2. Tool metrics
+        lines.append("# HELP mcp_tool_executions_total Total number of tool executions")
+        lines.append("# TYPE mcp_tool_executions_total counter")
+        for key, count in self._tool_executions.items():
+            parts = key.rsplit('_', 1)
+            if len(parts) == 2:
+                tool_name, status = parts[0], parts[1]
+                lines.append(f'mcp_tool_executions_total{{tool="{tool_name}",status="{status}"}} {count}')
+                
+        # Tool durations
+        lines.append("# HELP mcp_tool_duration_seconds Tool execution duration in seconds")
+        lines.append("# TYPE mcp_tool_duration_seconds gauge")
+        for tool_name, durations in self._tool_durations.items():
+            if durations:
+                duration_values = [d[1] for d in durations]
+                avg = sum(duration_values) / len(duration_values)
+                lines.append(f'mcp_tool_duration_seconds{{tool="{tool_name}"}} {avg}')
+
+        # 3. System metrics
+        if self.config.include_system_metrics:
+            sys_metrics = self.collect_system_metrics()
+            if "error" not in sys_metrics and sys_metrics:
+                lines.append("# HELP mcp_system_cpu_percent System CPU utilization")
+                lines.append("# TYPE mcp_system_cpu_percent gauge")
+                lines.append(f'mcp_system_cpu_percent {sys_metrics.get("cpu_percent", 0.0)}')
+                
+                lines.append("# HELP mcp_system_memory_percent System Memory utilization")
+                lines.append("# TYPE mcp_system_memory_percent gauge")
+                lines.append(f'mcp_system_memory_percent {sys_metrics.get("memory_percent", 0.0)}')
+                
+                lines.append("# HELP mcp_system_memory_used_mb System Memory used (MB)")
+                lines.append("# TYPE mcp_system_memory_used_mb gauge")
+                lines.append(f'mcp_system_memory_used_mb {sys_metrics.get("memory_used_mb", 0.0)}')
+                
+        # 4. Server info
+        lines.append("# HELP mcp_server_uptime_seconds Server uptime in seconds")
+        lines.append("# TYPE mcp_server_uptime_seconds gauge")
+        lines.append(f'mcp_server_uptime_seconds {time.time() - self.start_time}')
+        
+        lines.append("# HELP mcp_active_connections Current active WebSocket/HTTP connections")
+        lines.append("# TYPE mcp_active_connections gauge")
+        lines.append(f'mcp_active_connections {self._active_connections}')
+
+        # Ensure newline at EOF
+        return chr(10).join(lines) + chr(10)
     
     def cleanup_old_data(self):
         """Clean up old metrics data."""

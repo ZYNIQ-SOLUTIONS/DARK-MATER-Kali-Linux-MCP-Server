@@ -16,6 +16,7 @@ from .util import validate_tool_args, generate_run_id, format_duration, truncate
 from .scope import validate_scope_and_destructiveness
 from .artifacts import save_artifact
 from .memory import record_observation
+from .jobs import job_manager
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +94,12 @@ class ToolRegistry:
             schema_file: Schema filename (e.g., "web_nikto.json")
             executor: Callable that executes the tool
         """
+        import os
+        schema_path = os.path.join(os.path.dirname(__file__), "schemas", "tools", schema_file)
+        if not os.path.exists(schema_path):
+            logger.error(f"Schema file not found for tool {name}: {schema_path}. Skipping registration.")
+            return
+
         self.tools[name] = {
             "name": name,
             "description": description,
@@ -133,7 +140,7 @@ class ToolRegistry:
                 cmd.extend(["-p", ports])
                 
             # Add timing and timeout options for safety
-            cmd.extend(["-T2", "--host-timeout", "2m"])
+            cmd.extend(["-T3", "--host-timeout", "5m"])
             
             # Output in XML format for parsing
             cmd.append("-oX")
@@ -149,7 +156,7 @@ class ToolRegistry:
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=120,  # 2 minute timeout
+                timeout=600,  # 10 minute timeout
                 check=False
             )
             
@@ -371,6 +378,65 @@ def call_tool(server_id: str, name: str, args: Dict[str, Any]) -> Dict[str, Any]
             "rc": -1,
             "summary": f"Tool execution failed: {str(e)}",
             "error": "EXECUTION_FAILED"
+        }
+
+def call_tool_async(server_id: str, name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Execute a tool asynchronously by submitting it to the job manager.
+    
+    Args:
+        server_id: Server ID for authentication and artifact storage
+        name: Tool name to execute
+        args: Tool arguments
+        
+    Returns:
+        Job submission result dictionary
+    """
+    try:
+        # Get tool metadata
+        tool = tool_registry.get_tool(name)
+        if not tool:
+            return {
+                "rc": -1,
+                "summary": f"Tool not found: {name}",
+                "error": "TOOL_NOT_FOUND"
+            }
+        
+        # Validate arguments against schema
+        is_valid, validation_error = validate_tool_args(name, args)
+        if not is_valid:
+            return {
+                "rc": -1,
+                "summary": f"Invalid arguments: {validation_error}",
+                "error": "VALIDATION_FAILED"
+            }
+        
+        # Check scope and destructiveness
+        is_allowed, scope_error = validate_scope_and_destructiveness(name, args)
+        if not is_allowed:
+            return {
+                "rc": -1,
+                "summary": f"Operation not allowed: {scope_error}",
+                "error": "SCOPE_VIOLATION"
+            }
+        
+        # Submit to job manager
+        executor = tool["executor"]
+        job_id = job_manager.submit_job(server_id, name, args, executor)
+        
+        return {
+            "job_id": job_id,
+            "status": "queued",
+            "tool_name": name,
+            "message": "Job submitted successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error submitting async tool {name}: {e}")
+        return {
+            "rc": -1,
+            "summary": f"Tool submission failed: {str(e)}",
+            "error": "SUBMISSION_FAILED"
         }
 
 # Extended Tool Implementations for Phase 2
@@ -1043,8 +1109,8 @@ class MetasploitTools:
                 import os
                 try:
                     os.unlink(resource_file)
-                except:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Failed to clean up resource file {resource_file}: {e}")
                     
         except subprocess.TimeoutExpired:
             return ToolResult(
@@ -1152,8 +1218,8 @@ class MetasploitTools:
                 import os
                 try:
                     os.unlink(resource_file)
-                except:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Failed to clean up auxiliary resource file {resource_file}: {e}")
                     
         except subprocess.TimeoutExpired:
             return ToolResult(
@@ -1246,44 +1312,44 @@ class MetasploitTools:
 
 # Register new tools with the tool registry
 def register_extended_tools():
-    """Register Phase 2 extended tools."""
-    
-    # Web security tools
+    """Register Phase 2 extended tools (web, SSL, network, Metasploit)."""
+
+    # ── Web security tools ──────────────────────────────────────────────────
     tool_registry.register_tool(
         name="web.nikto",
-        description="Web vulnerability scanner using Nikto",
+        description="Web vulnerability scanner using Nikto — detects XSS, SQLi, misconfigs",
         category="web_security",
         schema_file="web_nikto.json",
         executor=WebSecurityTools.execute_nikto_scan
     )
-    
+
     tool_registry.register_tool(
-        name="web.dirb", 
-        description="Directory and file brute forcer",
+        name="web.dirb",
+        description="Directory and file brute forcer using DIRB wordlists",
         category="web_security",
         schema_file="web_dirb.json",
         executor=WebSecurityTools.execute_dirb_scan
     )
-    
-    # SSL security tools
+
+    # ── SSL security tools ──────────────────────────────────────────────────
     tool_registry.register_tool(
         name="ssl.sslyze",
-        description="SSL/TLS configuration analyzer",
+        description="SSL/TLS configuration analyzer — Heartbleed, POODLE, cipher suites",
         category="ssl_security",
-        schema_file="ssl_sslyze.json", 
+        schema_file="ssl_sslyze.json",
         executor=SSLSecurityTools.execute_sslyze_scan
     )
-    
-    # Network discovery tools
+
+    # ── Network discovery tools ─────────────────────────────────────────────
     tool_registry.register_tool(
         name="net.masscan",
-        description="High-speed network port scanner",
+        description="High-speed network port scanner — scans entire subnets fast",
         category="network_discovery",
         schema_file="net_masscan.json",
         executor=NetworkDiscoveryTools.execute_masscan
     )
-    
-    # Metasploit tools
+
+    # ── Metasploit tools ────────────────────────────────────────────────────
     tool_registry.register_tool(
         name="metasploit.exploit",
         description="Metasploit exploit module execution with safety controls",
@@ -1291,7 +1357,7 @@ def register_extended_tools():
         schema_file="metasploit_exploit.json",
         executor=MetasploitTools.execute_exploit
     )
-    
+
     tool_registry.register_tool(
         name="metasploit.auxiliary",
         description="Metasploit auxiliary modules for scanning and enumeration",
@@ -1299,8 +1365,287 @@ def register_extended_tools():
         schema_file="metasploit_auxiliary.json",
         executor=MetasploitTools.execute_auxiliary
     )
-    
-    logger.info("Extended tools (including Metasploit) registered successfully")
 
-# Register extended tools when module is imported
+    logger.info("Phase 2 tools registered (web, ssl, masscan, metasploit)")
+
+
+def register_networking_pack():
+    """Register the complete Networking Tools Pack — 20+ tools across 5 categories."""
+
+    # ── Import tool modules ─────────────────────────────────────────────────
+    try:
+        from mcp_tools.networking import NetworkingTools
+        from mcp_tools.enum.tools_enum import EnumTools
+        from mcp_tools.vuln.tools_vuln import VulnTools
+        from mcp_tools.brute.tools_brute import BruteTools
+    except ImportError as e:
+        logger.error(f"Failed to import networking pack modules: {e}")
+        return
+
+    # ── net.* — Network Analysis ────────────────────────────────────────────
+    tool_registry.register_tool(
+        name="net.scan_advanced",
+        description=(
+            "Full nmap scan: service detection (-sV), OS fingerprinting (-O), "
+            "default NSE scripts, all ports 1-65535"
+        ),
+        category="network_analysis",
+        schema_file="net_scan_advanced.json",
+        executor=NetworkingTools.execute_nmap_advanced
+    )
+
+    tool_registry.register_tool(
+        name="net.scan_udp",
+        description=(
+            "UDP port scan targeting common UDP services: DNS(53), DHCP(67/68), "
+            "TFTP(69), NTP(123), SNMP(161), Syslog(514), mDNS(5353)"
+        ),
+        category="network_analysis",
+        schema_file="net_scan_udp.json",
+        executor=NetworkingTools.execute_nmap_udp
+    )
+
+    tool_registry.register_tool(
+        name="net.ping_sweep",
+        description=(
+            "ICMP host discovery sweep — identify all live hosts in a CIDR range "
+            "without port scanning (fast recon)"
+        ),
+        category="network_analysis",
+        schema_file="net_ping_sweep.json",
+        executor=NetworkingTools.execute_ping_sweep
+    )
+
+    tool_registry.register_tool(
+        name="net.traceroute",
+        description=(
+            "Trace network path to target — identify routing hops, "
+            "detect firewalls/middleboxes, measure latency per hop"
+        ),
+        category="network_analysis",
+        schema_file="net_traceroute.json",
+        executor=NetworkingTools.execute_traceroute
+    )
+
+    tool_registry.register_tool(
+        name="net.arp_scan",
+        description=(
+            "Layer 2 ARP scan — discovers all live hosts on the local subnet "
+            "by MAC address (cannot be blocked by host firewalls)"
+        ),
+        category="network_analysis",
+        schema_file="net_arp_scan.json",
+        executor=NetworkingTools.execute_arp_scan
+    )
+
+    tool_registry.register_tool(
+        name="net.whois",
+        description=(
+            "WHOIS lookup for domain or IP — returns registrar, owner, "
+            "netblock, country, creation/expiry dates, name servers"
+        ),
+        category="network_analysis",
+        schema_file="net_whois.json",
+        executor=NetworkingTools.execute_whois
+    )
+
+    tool_registry.register_tool(
+        name="net.dns_lookup",
+        description=(
+            "DNS record enumeration — queries A, AAAA, MX, NS, TXT, CNAME, SOA "
+            "records; supports custom nameserver"
+        ),
+        category="network_analysis",
+        schema_file="net_dns_lookup.json",
+        executor=NetworkingTools.execute_dns_lookup
+    )
+
+    tool_registry.register_tool(
+        name="net.dns_zone_transfer",
+        description=(
+            "DNS zone transfer attempt (AXFR) — if server is misconfigured, "
+            "reveals ALL DNS records. Critical finding if successful."
+        ),
+        category="network_analysis",
+        schema_file="net_dns_zone_transfer.json",
+        executor=NetworkingTools.execute_dns_zone_transfer
+    )
+
+    tool_registry.register_tool(
+        name="net.snmp_enum",
+        description=(
+            "SNMP enumeration using snmpwalk — retrieves system info, "
+            "interfaces, running processes, ARP table via community string"
+        ),
+        category="network_analysis",
+        schema_file="net_snmp_enum.json",
+        executor=NetworkingTools.execute_snmp_enum
+    )
+
+    tool_registry.register_tool(
+        name="net.banner_grab",
+        description=(
+            "TCP service banner grabbing — captures version strings from "
+            "SSH, FTP, SMTP, HTTP, databases to fingerprint software versions"
+        ),
+        category="network_analysis",
+        schema_file="net_banner_grab.json",
+        executor=NetworkingTools.execute_banner_grab
+    )
+
+    # ── enum.* — Service Enumeration ────────────────────────────────────────
+    tool_registry.register_tool(
+        name="enum.smb",
+        description=(
+            "SMB/Samba enumeration using enum4linux-ng — discovers shares, "
+            "users, groups, password policies, OS info"
+        ),
+        category="enumeration",
+        schema_file="enum_smb.json",
+        executor=EnumTools.execute_smb_enum
+    )
+
+    tool_registry.register_tool(
+        name="enum.ssh",
+        description=(
+            "SSH server audit using ssh-audit — checks key exchange algorithms, "
+            "ciphers, MACs for weak/deprecated options and known CVEs"
+        ),
+        category="enumeration",
+        schema_file="enum_ssh.json",
+        executor=EnumTools.execute_ssh_audit
+    )
+
+    tool_registry.register_tool(
+        name="enum.http_headers",
+        description=(
+            "HTTP response headers analysis + technology fingerprinting via WhatWeb — "
+            "detects web server, frameworks, CMS, security header gaps"
+        ),
+        category="enumeration",
+        schema_file="enum_http_headers.json",
+        executor=EnumTools.execute_http_headers
+    )
+
+    tool_registry.register_tool(
+        name="enum.ftp",
+        description=(
+            "FTP service enumeration — checks anonymous login, banner grabbing, "
+            "BOUNCE attack, SYST info via nmap FTP scripts"
+        ),
+        category="enumeration",
+        schema_file="enum_ftp.json",
+        executor=EnumTools.execute_ftp_enum
+    )
+
+    tool_registry.register_tool(
+        name="enum.smtp",
+        description=(
+            "SMTP user enumeration via VRFY/EXPN/RCPT — identifies valid email accounts "
+            "and checks for open relay, NTLM auth info"
+        ),
+        category="enumeration",
+        schema_file="enum_smtp.json",
+        executor=EnumTools.execute_smtp_enum
+    )
+
+    tool_registry.register_tool(
+        name="enum.ldap",
+        description=(
+            "LDAP enumeration — checks anonymous bind, queries base DN, "
+            "extracts users/groups/OUs from Active Directory or OpenLDAP"
+        ),
+        category="enumeration",
+        schema_file="enum_ldap.json",
+        executor=EnumTools.execute_ldap_enum
+    )
+
+    tool_registry.register_tool(
+        name="enum.rdp",
+        description=(
+            "RDP service enumeration — checks encryption level, NLA enforcement, "
+            "MS12-020 DoS vulnerability via nmap RDP scripts"
+        ),
+        category="enumeration",
+        schema_file="enum_rdp.json",
+        executor=EnumTools.execute_rdp_enum
+    )
+
+    # ── vuln.* — Vulnerability Scanning ─────────────────────────────────────
+    tool_registry.register_tool(
+        name="vuln.nmap_scripts",
+        description=(
+            "nmap NSE vulnerability scan — runs the 'vuln' script category "
+            "to detect known CVEs, backdoors, misconfigurations"
+        ),
+        category="vulnerability",
+        schema_file="vuln_nmap_scripts.json",
+        executor=VulnTools.execute_nmap_vuln_scripts
+    )
+
+    tool_registry.register_tool(
+        name="vuln.searchsploit",
+        description=(
+            "Search Exploit-DB for known exploits — given a product/service name "
+            "returns matching public exploits with CVE IDs and severity"
+        ),
+        category="vulnerability",
+        schema_file="vuln_searchsploit.json",
+        executor=VulnTools.execute_searchsploit
+    )
+
+    tool_registry.register_tool(
+        name="web.gobuster",
+        description=(
+            "Directory/file/DNS brute force using gobuster — discovers hidden paths, "
+            "admin panels, backup files, API endpoints"
+        ),
+        category="web_security",
+        schema_file="web_gobuster.json",
+        executor=VulnTools.execute_gobuster
+    )
+
+    tool_registry.register_tool(
+        name="web.sqlmap",
+        description=(
+            "Automated SQL injection scanner using sqlmap — detects SQLi in GET/POST "
+            "parameters, identifies DBMS, extracts data"
+        ),
+        category="web_security",
+        schema_file="web_sqlmap.json",
+        executor=VulnTools.execute_sqlmap
+    )
+
+    # ── brute.* — Credential Testing ────────────────────────────────────────
+    tool_registry.register_tool(
+        name="brute.hydra",
+        description=(
+            "Multi-protocol credential brute force with Hydra — supports SSH, FTP, "
+            "HTTP, SMB, RDP, MySQL, PostgreSQL, and 20+ more protocols"
+        ),
+        category="credential_testing",
+        schema_file="brute_hydra.json",
+        executor=BruteTools.execute_hydra
+    )
+
+    tool_registry.register_tool(
+        name="brute.medusa",
+        description=(
+            "Parallel brute force tool Medusa — high-speed credential testing "
+            "alternative to Hydra with modular protocol support"
+        ),
+        category="credential_testing",
+        schema_file="brute_medusa.json",
+        executor=BruteTools.execute_medusa
+    )
+
+    tool_count = len(tool_registry.tools)
+    logger.info(
+        f"Networking Pack registered successfully — "
+        f"total tools available: {tool_count}"
+    )
+
+
+# Register all tools when module is imported
 register_extended_tools()
+register_networking_pack()

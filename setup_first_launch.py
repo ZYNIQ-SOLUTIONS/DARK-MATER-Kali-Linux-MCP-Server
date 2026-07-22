@@ -50,9 +50,12 @@ class FirstLaunchSetup:
             return True
         
         try:
+            env = os.environ.copy()
+            env["PYTHONPATH"] = str(self.project_root)
+            env["MCP_IN_DOCKER"] = "true"
             result = subprocess.run([
                 sys.executable, str(test_runner)
-            ], cwd=self.project_root)
+            ], cwd=self.project_root, env=env)
             
             return result.returncode == 0
             

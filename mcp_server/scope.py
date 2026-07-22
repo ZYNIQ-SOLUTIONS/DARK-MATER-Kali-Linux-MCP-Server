@@ -116,8 +116,8 @@ def parse_target(target: str) -> Optional[ipaddress.IPv4Address]:
         if ip_str:
             try:
                 return ipaddress.IPv4Address(ip_str)
-            except ipaddress.AddressValueError:
-                pass
+            except ipaddress.AddressValueError as e:
+                logger.warning(f"Failed to parse resolved IP address string '{ip_str}': {e}")
         
         logger.warning(f"Could not parse target: {target}")
         return None

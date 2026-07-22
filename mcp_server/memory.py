@@ -183,8 +183,8 @@ class MemoryManager:
                     if row["parsed_data"]:
                         try:
                             observation["parsed_data"] = json.loads(row["parsed_data"])
-                        except json.JSONDecodeError:
-                            pass
+                        except json.JSONDecodeError as e:
+                            logger.error(f"Failed to decode parsed_data JSON: {e}")
                     
                     observations.append(observation)
                 

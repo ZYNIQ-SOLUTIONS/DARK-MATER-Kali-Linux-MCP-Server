@@ -20,7 +20,9 @@ logger = logging.getLogger(__name__)
 
 # Configuration paths - handle both Windows and Linux
 import os
-if os.name == 'nt':  # Windows
+if os.environ.get("MCP_TEST_CONFIG_DIR"):
+    CONFIG_DIR = Path(os.environ["MCP_TEST_CONFIG_DIR"])
+elif os.name == 'nt':  # Windows
     CONFIG_DIR = Path.home() / ".mcp-kali"
 else:  # Linux/Unix
     CONFIG_DIR = Path("/etc/mcp-kali")
@@ -140,84 +142,96 @@ def save_enroll(enroll_data: EnrollmentData) -> bool:
         logger.error(f"Error saving enrollment data: {e}")
         return False
 
-def load_api_credentials() -> Dict[str, ServerCredentials]:
-    """
-    Load API credentials from disk.
+class SecretManager:
+    """Manages secure access to credentials from multiple sources (Env, Vault, File)."""
     
-    Returns:
-        Dictionary mapping server_id to credentials
-    """
-    try:
-        if not CREDENTIALS_FILE.exists():
-            logger.debug(f"Credentials file {CREDENTIALS_FILE} does not exist")
-            return {}
-            
-        with open(CREDENTIALS_FILE, 'r') as f:
-            data = json.load(f)
-            
+    @classmethod
+    def get_credentials(cls) -> Dict[str, ServerCredentials]:
+        """Load API credentials from environment variables with fallback to disk."""
         credentials = {}
         
-        # Handle both formats: single credential object or dictionary of credentials
-        if 'server_id' in data and 'api_key' in data:
-            # Single credential format (from smart_start.py)
-            server_id = data['server_id']
-            cred_data = data.copy()
+        # 1. Environment Variable Support (Highest Priority)
+        env_key = os.environ.get("MCP_KALI_API_KEY")
+        if env_key:
+            server_id = os.environ.get("MCP_KALI_SERVER_ID", "env-server")
+            credentials[server_id] = ServerCredentials(
+                server_id=server_id,
+                api_key=env_key,
+                label="Environment Configured Server",
+                created=datetime.now(timezone.utc)
+            )
             
-            # Convert string timestamp back to datetime
-            if 'created' in cred_data and isinstance(cred_data['created'], str):
-                cred_data['created'] = datetime.fromisoformat(cred_data['created'])
+        # 2. JSON Environment Variables (Multiple keys)
+        env_keys_json = os.environ.get("MCP_KALI_API_KEYS_JSON")
+        if env_keys_json:
+            try:
+                data = json.loads(env_keys_json)
+                for s_id, cred_data in data.items():
+                    if 'created' in cred_data and isinstance(cred_data['created'], str):
+                        cred_data['created'] = datetime.fromisoformat(cred_data['created'])
+                    credentials[s_id] = ServerCredentials(**cred_data)
+            except Exception as e:
+                logger.error(f"Failed to parse MCP_KALI_API_KEYS_JSON: {e}")
                 
-            credentials[server_id] = ServerCredentials(**cred_data)
-            
-        else:
-            # Multiple credentials format (dictionary)
-            for server_id, cred_data in data.items():
-                # Convert string timestamp back to datetime
-                if 'created' in cred_data and isinstance(cred_data['created'], str):
-                    cred_data['created'] = datetime.fromisoformat(cred_data['created'])
-                    
-                credentials[server_id] = ServerCredentials(**cred_data)
+        # 3. Disk Fallback
+        try:
+            if not CREDENTIALS_FILE.exists():
+                logger.debug(f"Credentials file {CREDENTIALS_FILE} does not exist")
+                return credentials
+                
+            with open(CREDENTIALS_FILE, 'r') as f:
+                data = json.load(f)
+                
+            # Handle both formats: single credential object or dictionary of credentials
+            if 'server_id' in data and 'api_key' in data:
+                server_id = data['server_id']
+                if server_id not in credentials:  # Env vars take precedence
+                    cred_data = data.copy()
+                    if 'created' in cred_data and isinstance(cred_data['created'], str):
+                        cred_data['created'] = datetime.fromisoformat(cred_data['created'])
+                    credentials[server_id] = ServerCredentials(**cred_data)
+            else:
+                for server_id, cred_data in data.items():
+                    if server_id not in credentials:  # Env vars take precedence
+                        if 'created' in cred_data and isinstance(cred_data['created'], str):
+                            cred_data['created'] = datetime.fromisoformat(cred_data['created'])
+                        credentials[server_id] = ServerCredentials(**cred_data)
+                        
+        except Exception as e:
+            logger.error(f"Error loading API credentials from disk: {e}")
             
         return credentials
-        
-    except Exception as e:
-        logger.error(f"Error loading API credentials: {e}")
-        return {}
+
+    @classmethod
+    def save_credentials(cls, credentials: Dict[str, ServerCredentials]) -> bool:
+        """Save API credentials to disk (for programmatic enrollments)."""
+        try:
+            CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+            
+            data = {}
+            for server_id, creds in credentials.items():
+                cred_data = creds.model_dump()
+                if isinstance(cred_data['created'], datetime):
+                    cred_data['created'] = cred_data['created'].isoformat()
+                data[server_id] = cred_data
+            
+            with open(CREDENTIALS_FILE, 'w') as f:
+                json.dump(data, f, indent=2)
+                
+            CREDENTIALS_FILE.chmod(0o600)
+            logger.info(f"API credentials saved to {CREDENTIALS_FILE}")
+            return True
+        except Exception as e:
+            logger.error(f"Error saving API credentials: {e}")
+            return False
+
+def load_api_credentials() -> Dict[str, ServerCredentials]:
+    """Legacy wrapper for SecretManager.get_credentials()"""
+    return SecretManager.get_credentials()
 
 def save_api_credentials(credentials: Dict[str, ServerCredentials]) -> bool:
-    """
-    Save API credentials to disk.
-    
-    Args:
-        credentials: Dictionary of server credentials to save
-        
-    Returns:
-        True if successful, False otherwise
-    """
-    try:
-        # Ensure directory exists
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        
-        # Convert to serializable format
-        data = {}
-        for server_id, creds in credentials.items():
-            cred_data = creds.model_dump()
-            if isinstance(cred_data['created'], datetime):
-                cred_data['created'] = cred_data['created'].isoformat()
-            data[server_id] = cred_data
-        
-        with open(CREDENTIALS_FILE, 'w') as f:
-            json.dump(data, f, indent=2)
-            
-        # Secure the file permissions (readable only by owner)
-        CREDENTIALS_FILE.chmod(0o600)
-        
-        logger.info(f"API credentials saved to {CREDENTIALS_FILE}")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Error saving API credentials: {e}")
-        return False
+    """Legacy wrapper for SecretManager.save_credentials()"""
+    return SecretManager.save_credentials(credentials)
 
 def validate_enrollment(request: EnrollmentRequest) -> Tuple[bool, str]:
     """

@@ -9,7 +9,7 @@ from pathlib import Path
 
 def test_schema():
     """Test the schema file."""
-    schema_path = Path('mcp_server/schemas/tools/net.scan_basic.json')
+    schema_path = Path('mcp_server/schemas/tools/net_scan_basic.json')
     print(f'📋 Testing schema file: {schema_path}')
     print(f'File exists: {schema_path.exists()}')
 

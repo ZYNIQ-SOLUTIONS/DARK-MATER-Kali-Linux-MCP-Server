@@ -27,7 +27,9 @@ def load_schema(tool_name: str) -> Optional[Dict[str, Any]]:
     """
     try:
         # Use string path to avoid Windows path issues
-        schema_file_str = str(SCHEMA_DIR / f"{tool_name}.json")
+        # Normalize tool name dots to underscores for schema filenames
+        normalized_name = tool_name.replace(".", "_")
+        schema_file_str = str(SCHEMA_DIR / f"{normalized_name}.json")
         logger.debug(f"Looking for schema file: {schema_file_str}")
         
         # Check using os.path.exists
