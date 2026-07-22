@@ -349,15 +349,15 @@ The server includes an automatic first-launch setup that ensures project integri
 
 ```bash
 # First launch automatically runs comprehensive tests
-python kali_server.py --bind 0.0.0.0:5000
+python3 kali_server.py --bind 0.0.0.0:5000
 
 # Manual test suite execution (anytime)
-python tests/run_tests.py
+python3 tests/run_tests.py
 
 # Test specific components
-python tests/unit/test_server.py          # Unit tests
-python tests/integration/test_server_live.py  # Integration tests  
-python tests/acceptance/test_complete_live_enhanced.py  # End-to-end tests
+python3 tests/unit/test_server.py          # Unit tests
+python3 tests/integration/test_server_live.py  # Integration tests  
+python3 tests/acceptance/test_complete_live_enhanced.py  # End-to-end tests
 ```
 
 **What happens on first launch:**
@@ -420,22 +420,22 @@ The server includes a comprehensive CLI with enhanced authentication information
 
 ```bash
 # Display comprehensive authentication info
-python kali_server.py --show-auth
+python3 kali_server.py --show-auth
 
 # Show full server configuration
-python kali_server.py --show-config
+python3 kali_server.py --show-config
 
 # Test connection to running server
-python kali_server.py --test-connection
+python3 kali_server.py --test-connection
 
 # Generate client configurations
-python kali_server.py --generate-client-config curl        # Ready-to-use curl commands
-python kali_server.py --generate-client-config python      # Python client code
-python kali_server.py --generate-client-config powershell  # PowerShell commands
-python kali_server.py --generate-client-config json        # JSON configuration
+python3 kali_server.py --generate-client-config curl        # Ready-to-use curl commands
+python3 kali_server.py --generate-client-config python      # Python client code
+python3 kali_server.py --generate-client-config powershell  # PowerShell commands
+python3 kali_server.py --generate-client-config json        # JSON configuration
 
 # Enhanced help with examples
-python kali_server.py --help
+python3 kali_server.py --help
 ```
 
 **CLI Features:**
@@ -482,10 +482,10 @@ For remote access without port forwarding:
    Environment="NGROK_AUTHTOKEN=your_token_here"
    ExecStart=
    ExecStart=/opt/mcp-kali-server/venv/bin/# Run in development mode
-python kali_server.py --debug --bind 127.0.0.1:8000
+python3 kali_server.py --debug --bind 127.0.0.1:8000
 
 # Run with ngrok tunnel for testing
-python kali_server.py --debug --bind 127.0.0.1:8000 --ngrok --ngrok-authtoken YOUR_TOKEN
+python3 kali_server.py --debug --bind 127.0.0.1:8000 --ngrok --ngrok-authtoken YOUR_TOKEN
 ```
 
 ### Adding New Tools
@@ -559,6 +559,21 @@ curl -sS http://localhost:5000/health \
 
 If you see `{ "ok": true, ... }`, your server is properly registered and ready.
 
+## Docker Environment (New in v2.0)
+
+A complete production-ready Docker Compose setup is now available:
+
+```bash
+# Build and run the server in the background
+docker-compose up -d --build
+
+# View real-time logs
+docker-compose logs -f kali-api
+
+# Stop the server
+docker-compose down
+```
+
 ## API Usage
 
 ### Health Check
@@ -573,6 +588,27 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 ```bash
 curl -H "Authorization: Bearer YOUR_API_KEY" \
   "http://SERVER_IP:5000/tools/list"
+```
+
+### Asynchronous Jobs
+
+The server supports asynchronous tool execution for long-running tasks.
+
+```bash
+# Submit a background job
+curl -X POST "http://SERVER_IP:5000/tools/jobs" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "net.scan_basic",
+    "arguments": {
+      "target": "192.168.1.1/24"
+    }
+  }'
+
+# Check job status
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "http://SERVER_IP:5000/tools/jobs/YOUR_JOB_ID"
 ```
 
 ### Execute Network Scan
