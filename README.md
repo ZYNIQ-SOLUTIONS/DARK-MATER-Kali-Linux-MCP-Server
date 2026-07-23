@@ -6,7 +6,7 @@
 
 <div align="center">
   <h3>🔒 Production-Ready Security Testing Platform</h3>
-  <p>A powerful, enterprise-grade Model Context Protocol (MCP) server for security testing, network reconnaissance, and vulnerability assessments with Kali Linux tools.</p>
+  <p>A powerful, enterprise-grade Model Context Protocol (MCP) server bridging Large Language Models (LLMs) with advanced Kali Linux security testing, network reconnaissance, and vulnerability assessment tools.</p>
   <p><strong>🏢 Powered by <a href="https://zyniq.solutions">Zyniq Solutions</a></strong></p>
   
   <!-- Technology Stack Badges -->
@@ -34,55 +34,57 @@
 ## 🌟 Key Enterprise Features
 
 - **🌐 Standard OpenMCP JSON-RPC 2.0 (`/mcp`)**: Native protocol support for `initialize`, `tools/list`, and `tools/call` compatible with any standard MCP client or dashboard.
+- **🛠️ Comprehensive Tool Modules**: Access dozens of Kali tools across 10 discrete categories: Vulnerability Scanning, Exploitation, Reconnaissance, Wireless, Social Engineering, Web Utilities, Password Cracking, Networking, Enum, and Post-Exploitation.
 - **🔐 Multi-Tenancy & RBAC Scopes**: Granular client token scoping (`recon:read`, `recon:execute`, `audit:execute`, `admin:all`) and per-tenant CIDR target guardrails.
 - **💾 Persistent Async Job Queue (SQLite)**: Asynchronous task tracking backed by a durable SQLite database (`jobs.db`) to ensure long-running scans survive service restarts.
 - **📡 Server-Sent Events (SSE) Live Streaming**: Stream real-time stdout/stderr logs and state updates directly to clients via `GET /tools/jobs/{job_id}/stream`.
 - **🛡️ Smart Guardrails & Destructive Checks**: CIDR subnet validation (`allowed_cidrs`), automated check-only modes, and strict rate-limiting.
 - **📦 SIEM Audit Exporter**: Structured JSON security logging with configurable webhook export (`MCP_SIEM_WEBHOOK_URL`).
 - **🐍 Python Client SDK**: Importable SDK (`darkmater_mcp.DarkMaterClient`) for rapid Python & AI agent integration.
-- **📊 Prometheus Observability**: Production metric collection at `/metrics` measuring job execution times, queue sizes, and error rates.
-- **🤖 Ollama AI Integration**: Built-in integration with local Ollama service (`http://localhost:11434/` with `gemma4:e4b`) for automated vulnerability summarization and tool recommendations.
+- **🤖 Ollama AI Integration**: Built-in integration with local Ollama service for automated vulnerability summarization and tool recommendations.
 
 ---
 
 ## 🏗️ System Architecture
 
-```
-                      +-----------------------------------+
-                      |   Client Application / Dashboard   |
-                      |   (LangChain / React / Custom)    |
-                      +-----------------+-----------------+
-                                        |
-                   Bearer JWT / OpenMCP | JSON-RPC 2.0 / SSE Stream
-                                        v
-+-----------------------------------------------------------------------------------+
-|                            DARK MATER MCP API SERVER                              |
-|                                                                                   |
-|  +--------------------+  +---------------------+  +----------------------------+  |
-|  | Multi-Tenant Auth  |  | Persistent Job Store|  | OpenMCP Standard Transport |  |
-|  | & RBAC Guardrails  |  | (SQLite / Disk WAL) |  | (/mcp Endpoint + SDKs)     |  |
-|  +---------+----------+  +----------+----------+  +-------------+--------------+  |
-|            |                        |                           |                 |
-+------------|------------------------|---------------------------|-----------------+
-             |                        |                           |
-             +------------------------+---------------------------+
-                                      |
-                                      v
-                 +------------------------------------------+
-                 | Ephemeral Container Sidecar Runner Engine|
-                 |  (cgroup & network sandboxed executions) |
-                 +--------------------+---------------------+
-                                      |
-                                      v
-                 +------------------------------------------+
-                 | Benign Target & SIEM Audit Log Exporter  |
-                 | (Automated E2E Testbed & Observability)  |
-                 +------------------------------------------+
+DARK MATER uses a decoupled, robust architecture to safely execute shell tools inside sandboxed environments while exposing a clean JSON-RPC interface for LLM agents.
+
+```mermaid
+flowchart TD
+    A[LLM Agent / Dashboard] <-->|JSON-RPC 2.0| B(FastAPI Server)
+    B <-->|Auth & Scopes| C[(Enrollment & SQLite)]
+    B -->|Async Dispatch| D[Job Queue]
+    D --> E[Tool Execution Layer]
+    E --> F[Vulnerability / Recon / Post-Ex]
+    E --> G[Exploit / Social / Wireless]
+    E --> H[Web Utility / Network]
+    
+    E -.->|Live Output| I(SSE Streaming)
+    I -.->|Push| A
+    
+    B -->|SIEM Webhooks| J[External SIEM]
+    B -->|Analysis| K[Ollama AI]
 ```
 
 ---
 
-## 🚀 Quick Start Guide
+## 🛠️ Supported Capabilities & Modules
+
+The platform exposes wrapped command-line tools under these unified MCP capabilities:
+
+| Category | Tools Included | Sub-Scope Identifier |
+| :--- | :--- | :--- |
+| **Reconnaissance** | `nmap`, `masscan`, `nikto`, `amass`, `theharvester` | `recon:*` |
+| **Vulnerability** | `sqlmap`, `zap`, `openvas` (via wrappers) | `vuln:*` |
+| **Exploitation** | `metasploit` (msfconsole), `cme` (CrackMapExec), `impacket` | `exploit:*` |
+| **Post-Exploitation**| `hashcat`, `john`, `linpeas`, `winpeas` | `postex:*` |
+| **Wireless** | `aircrack-ng`, `wifite`, `bluez` | `wireless:*` |
+| **Social** | `setoolkit`, `evilginx2` | `social:*` |
+| **Web Utilities** | `wpscan`, `ffuf`, `nuclei` | `utility:*` |
+
+---
+
+## 🚀 Quick Start & Installation
 
 ### Option 1: Docker Compose Deployment (Recommended)
 
@@ -98,9 +100,6 @@ docker-compose up -d --build
 
 # 3. View live server logs
 docker-compose logs -f kali-api
-
-# 4. Check container status
-docker-compose ps
 ```
 
 ### Option 2: Native Linux Installation (Systemd)
@@ -118,38 +117,39 @@ sudo systemctl status mcp-kali-server
 
 ---
 
-## 🔐 Credentials & Enrollment
+## 🔐 Credentials & Security Best Practices
 
-### Step 1: Locate Enrollment Token
+### 1. Protect Your Enrollment Token
+The `enroll.json` token is required to generate API Keys. Do not leak this file.
 ```bash
-# Docker Container
-docker exec mcp-kali-api cat /etc/mcp-kali/enroll.json
-
-# Native Host
+# View your enrollment configuration
 cat /etc/mcp-kali/enroll.json
 ```
 
-### Step 2: Register & Obtain API Key
+### 2. Generate Tenant API Keys
 ```bash
 curl -sS -X POST http://localhost:5000/enroll \
   -H "Content-Type: application/json" \
   -d '{
     "id": "kali-docker-test",
-    "token": "test_token",
+    "token": "<YOUR_SECRET_TOKEN>",
     "label": "Production-Lab-1"
   }'
 ```
+*Save the returned `api_key`. It must be passed in the `Authorization: Bearer <api_key>` header.*
 
-**Response**:
+### 3. Enforce CIDR Guardrails
+Always define explicitly allowed target ranges in `/etc/mcp-kali/scope.json`:
 ```json
 {
-  "server_id": "kali-docker-test",
-  "api_key": "d90b53b206bdec6ac51a4f7d18a47fc17fd9d25945d48055ebc0bedc8d7980d9",
-  "label": "Production-Lab-1"
+  "allowed_cidrs": [
+    "10.0.0.0/8",
+    "192.168.0.0/16",
+    "127.0.0.1/32"
+  ],
+  "allow_destructive": false
 }
 ```
-
-Use this `api_key` in the `Authorization: Bearer <api_key>` header for all API requests.
 
 ---
 
@@ -157,32 +157,11 @@ Use this `api_key` in the `Authorization: Bearer <api_key>` header for all API r
 
 ### 1. Server Health Check
 ```bash
-curl -sS -H "Authorization: Bearer YOUR_API_KEY" \
-  "http://localhost:5000/health"
+curl -sS -H "Authorization: Bearer YOUR_API_KEY" "http://localhost:5000/health"
 ```
 
 ### 2. OpenMCP JSON-RPC 2.0 Standard (`/mcp`)
 ```bash
-# Initialize Session
-curl -sS -X POST "http://localhost:5000/mcp" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "method": "initialize",
-    "id": 1
-  }'
-
-# List Available Tools via OpenMCP
-curl -sS -X POST "http://localhost:5000/mcp" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "method": "tools/list",
-    "id": 2
-  }'
-
 # Execute Tool via OpenMCP
 curl -sS -X POST "http://localhost:5000/mcp" \
   -H "Authorization: Bearer YOUR_API_KEY" \
@@ -191,44 +170,34 @@ curl -sS -X POST "http://localhost:5000/mcp" \
     "jsonrpc": "2.0",
     "method": "tools/call",
     "params": {
-      "name": "net.scan_basic",
+      "name": "recon.nmap_scan",
       "arguments": { "target": "127.0.0.1", "fast": true }
     },
-    "id": 3
+    "id": 1
   }'
 ```
 
 ### 3. Asynchronous Job Execution & SSE Event Streaming
-
 ```bash
 # 1. Submit an Async Background Job
 JOB_ID=$(curl -sS -X POST "http://localhost:5000/tools/jobs" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "net.scan_basic",
-    "arguments": { "target": "192.168.65.0/24", "fast": true }
+    "name": "recon.nmap_scan",
+    "arguments": { "target": "192.168.65.0/24" }
   }' | jq -r '.job_id')
 
-# 2. Poll Job Status
-curl -sS -H "Authorization: Bearer YOUR_API_KEY" \
-  "http://localhost:5000/tools/jobs/${JOB_ID}"
-
-# 3. Stream Real-Time SSE Updates
+# 2. Stream Real-Time SSE Updates
 curl -N -H "Authorization: Bearer YOUR_API_KEY" \
   "http://localhost:5000/tools/jobs/${JOB_ID}/stream"
-```
-
-### 4. Prometheus Metrics Endpoint
-```bash
-curl -sS "http://localhost:5000/metrics"
 ```
 
 ---
 
 ## 🐍 Python Client SDK Usage
 
-The python SDK is located in `sdk/python/darkmater_mcp`.
+The Python SDK (`sdk/python/darkmater_mcp/`) offers an intuitive, typed interface for AI integrations:
 
 ```python
 from darkmater_mcp import DarkMaterClient
@@ -236,76 +205,28 @@ from darkmater_mcp import DarkMaterClient
 # Initialize client
 client = DarkMaterClient(base_url="http://localhost:5000", api_key="YOUR_API_KEY")
 
-# 1. Health check
-print("Health:", client.health())
-
-# 2. List tools
-tools = client.list_tools()
-print(f"Tools available: {len(tools)}")
-
-# 3. Synchronous execution
-scan_result = client.call_tool("net.scan_basic", {"target": "127.0.0.1", "fast": True})
+# 1. Synchronous Execution
+scan_result = client.call_tool("recon.nmap_scan", {"target": "127.0.0.1", "fast": True})
 print("Scan Summary:", scan_result.get("summary"))
 
-# 4. Asynchronous persistent job submission
-job_id = client.submit_job("net.scan_basic", {"target": "127.0.0.1", "fast": True})
-print(f"Async Job ID: {job_id}")
-
-# 5. OpenMCP Standard JSON-RPC Call
-rpc_resp = client.jsonrpc_request("initialize")
-print("OpenMCP Init:", rpc_resp.get("result"))
-```
-
----
-
-## ⚙️ Scope Configuration & Security Guardrails
-
-Guardrails are managed via `/etc/mcp-kali/scope.json`:
-
-```json
-{
-  "allowed_cidrs": [
-    "10.0.0.0/8",
-    "192.168.0.0/16",
-    "172.16.0.0/12",
-    "127.0.0.1/32"
-  ],
-  "allow_destructive": false
-}
-```
-
-- `allowed_cidrs`: Whitelisted networks for scanning and assessment targets.
-- `allow_destructive`: When set to `false`, destructive or intrusive exploits are blocked automatically.
-
----
-
-## 🤖 Ollama AI Analysis Integration
-
-The MCP server connects directly to your exposed Ollama instance for automated AI analysis and tool recommendations:
-
-```bash
-# Environment Configuration
-export OLLAMA_URL="http://localhost:11434/"
-export OLLAMA_MODEL="gemma4:e4b"
-```
-
-### AI Job Analysis Endpoint
-```bash
-curl -sS -X POST -H "Authorization: Bearer YOUR_API_KEY" \
-  "http://localhost:5000/tools/jobs/${JOB_ID}/analyze"
+# 2. Asynchronous Execution
+job_id = client.submit_job("recon.nmap_scan", {"target": "127.0.0.1"})
+for event in client.stream_job(job_id):
+    if event['status'] == 'output':
+        print(f"[{event['stream']}] {event['content']}")
 ```
 
 ---
 
 ## 🧪 Automated E2E Testing Suite
 
-Run the full end-to-end master test suite to verify server functionality:
+DARK MATER ships with a comprehensive test suite covering the core MCP APIs, standard operations, unit tests, and LLM configuration routines:
 
 ```bash
-# Run E2E Test Suite locally
-python3 tests/e2e/test_master_e2e.py
+# Ensure FastAPI & Pytest are installed
+pip install -r requirements.txt
 
-# Run unit and integration tests
+# Run full test suite
 python3 tests/run_tests.py
 ```
 

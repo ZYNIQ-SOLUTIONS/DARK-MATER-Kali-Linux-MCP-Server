@@ -31,6 +31,7 @@ from .ngrok_manager import get_ngrok_info, get_ngrok_metrics
 from .rate_limiter import apply_rate_limiting, get_client_identifier
 from .audit import audit_logger, AuditEventType, AuditSeverity
 from .metrics import metrics_collector
+from .dashboard import DashboardAuthRequest
 
 logger = logging.getLogger(__name__)
 
@@ -1166,17 +1167,17 @@ async def detailed_health_endpoint(server_creds: ServerCredentials = Depends(req
 # Dashboard Integration Endpoints
 
 @app.post("/api/v2/dashboard/auth")
-async def dashboard_auth_endpoint(auth_request: "DashboardAuthRequest"):
+async def dashboard_auth_endpoint(auth_request: DashboardAuthRequest):
     """
     Authenticate DARK MATTER MCP Client dashboard.
     
     Provides specialized authentication for the dashboard with signature verification.
     """
     try:
-        from .dashboard import dashboard_manager, DashboardAuthRequest
+        from .dashboard import dashboard_manager
         
         # Validate request
-        dashboard_auth_req = DashboardAuthRequest(**auth_request.dict())
+        dashboard_auth_req = auth_request
         
         # Authenticate dashboard
         connection_info = dashboard_manager.authenticate_dashboard(dashboard_auth_req)

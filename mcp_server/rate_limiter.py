@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 
 class RateLimitConfig(BaseModel):
     """Rate limit configuration."""
-    requests_per_minute: int = 30
+    requests_per_minute: int = 20
     requests_per_hour: int = 500
     burst_limit: int = 10
-    tool_requests_per_minute: int = 10
+    tool_requests_per_minute: int = 20
     enabled: bool = True
 
 class RateLimiter:

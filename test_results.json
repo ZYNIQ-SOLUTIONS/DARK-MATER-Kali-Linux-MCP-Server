@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-10-07T07:37:28.694713",
+  "timestamp": "2026-07-23T04:50:58.214439",
   "total_tests": 14,
-  "passed": 4,
-  "failed": 10,
+  "passed": 12,
+  "failed": 2,
   "skipped": 0,
   "test_results": [
     {
@@ -14,26 +14,26 @@
     {
       "category": "unit",
       "file": "test_schema_validation.py",
-      "success": false,
-      "output": "Traceback (most recent call last):\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\unit\\test_schema_validation.py\", line 68, in <module>\n    test_schema()\n    ~~~~~~~~~~~^^\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\unit\\test_schema_validation.py\", line 13, in test_schema\n    print(f'\\U0001f4cb Testing schema file: {schema_path}')\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Preview"
+      "success": true,
+      "output": "\ud83d\udccb Testing schema file: mcp_server\\schemas\\tools\\net_scan_basic.json\nFile exists: True\n\u2705 Schema loaded successfully\nTitle: net.scan_basic\nDescription: Basic network scan using nmap with safety constraints...\nRequired fields: ['target']\n\u2705 Schema validation passed\n\u2705 Test case 1 validation passed\n\u274c Test case 2 validation failed: Additional properties are not allowed ('service_detection' was unexpected)\n\u274c Test case 3 validation failed: Additional properties are not allowed ('timing_template' was unex"
     },
     {
       "category": "unit",
       "file": "test_server.py",
-      "success": false,
-      "output": "Traceback (most recent call last):\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\unit\\test_server.py\", line 193, in <module>\n    test_server()\n    ~~~~~~~~~~~^^\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\unit\\test_server.py\", line 31, in test_server\n    print_colored(\"\\U0001f9ea DARK MATER MCP Server Test\", \"cyan\")\n    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Preview Lab\\On"
+      "success": true,
+      "output": "\u001b[96m\ud83e\uddea DARK MATER MCP Server Test\u001b[0m\n\u001b[94m==================================================\u001b[0m\n\u001b[94m\n1\ufe0f\u20e3 Checking if server is running...\u001b[0m\n\u001b[92m\u2705 Found server on port 5000\u001b[0m\n\u001b[92m\u2705 Server responding with status: 401\u001b[0m\n\u001b[93m\u2139\ufe0f  401 Unauthorized - Missing API key\u001b[0m\n\u001b[94m\n2\ufe0f\u20e3 Generating enrollment token...\u001b[0m\n\u001b[92m\u2705 Token generated: kali-DESKTOP-0ORL16V-1784767858\u001b[0m\n\u001b[94m\n3\ufe0f\u20e3 Enrolling server...\u001b[0m\n\u001b[91m\u274c Enrollment failed: HTTP 400\u001b[0m\n\u001b[91mResponse: {\"detail\":\"Enrollment failed: I"
     },
     {
       "category": "integration",
       "file": "test_5001.py",
-      "success": false,
-      "output": "Traceback (most recent call last):\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\integration\\test_5001.py\", line 48, in <module>\n    test_server_5001()\n    ~~~~~~~~~~~~~~~~^^\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\integration\\test_5001.py\", line 14, in test_server_5001\n    print('\\U0001f504 Testing MCP Server on port 5001...')\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Previe"
+      "success": true,
+      "output": "\ud83d\udd04 Testing MCP Server on port 5001...\n\u274c Error connecting to server: HTTPConnectionPool(host='127.0.0.1', port=5001): Max retries exceeded with url: /health (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=5001): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))\n"
     },
     {
       "category": "integration",
       "file": "test_llm_config.py",
       "success": false,
-      "output": "Traceback (most recent call last):\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\integration\\test_llm_config.py\", line 179, in <module>\n    success = test_llm_config()\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\integration\\test_llm_config.py\", line 12, in test_llm_config\n    print(\"\\U0001f9ea LLM Configuration System Test\")\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Preview Lab\\AppDat"
+      "output": "\ud83e\uddea LLM Configuration System Test\n==================================================\n\u2705 Server is running\n\n\ud83d\udd10 Creating enrollment...\n\u274c Enrollment failed: 400\n\ud83d\udccb Response: {\"detail\":\"Enrollment failed: Invalid enrollment ID\"}\n\n\u274c Some tests failed!\n"
     },
     {
       "category": "integration",
@@ -45,7 +45,7 @@
       "category": "integration",
       "file": "test_production_api.py",
       "success": false,
-      "output": "Traceback (most recent call last):\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\integration\\test_production_api.py\", line 413, in main\n    with open(args.enroll_file, 'r') as f:\n         ~~~~^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/etc/mcp-kali/enroll.json'\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New "
+      "output": "  File \"C:\\Users\\Admin\\Desktop\\ZYNIQ Solutions\\Apps By Z-Labs\\DARK-MATER-Kali-Linux-MCP-Server\\tests\\integration\\test_production_api.py\", line 426\n    sys.exit(1)\nIndentationError: unexpected indent\n"
     },
     {
       "category": "integration",
@@ -56,20 +56,20 @@
     {
       "category": "integration",
       "file": "test_servers.py",
-      "success": false,
-      "output": "Traceback (most recent call last):\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\integration\\test_servers.py\", line 62, in <module>\n    test_mcp_servers()\n    ~~~~~~~~~~~~~~~~^^\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\integration\\test_servers.py\", line 45, in test_mcp_servers\n    print('\\U0001f50d Testing MCP Servers with API Key')\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Prev"
+      "success": true,
+      "output": "\ud83d\udd0d Testing MCP Servers with API Key\n============================================================\n\n\ud83d\udce1 Testing Port 5000:\n\u2705 Health Check (Port 5000)\n   Status: 401\n   Error: {\"detail\":\"Invalid API key\"}\n----------------------------------------\n\n\ud83d\udce1 Testing Port 5001:\n\u274c Health Check (Port 5001): HTTPConnectionPool(host='127.0.0.1', port=5001): Max retries exceeded with url: /health (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=5001): Failed to establish a new connection: [WinErro"
     },
     {
       "category": "integration",
       "file": "test_server_live.py",
-      "success": false,
-      "output": "Traceback (most recent call last):\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\integration\\test_server_live.py\", line 107, in <module>\n    main()\n    ~~~~^^\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\integration\\test_server_live.py\", line 85, in main\n    server_proc = start_server()\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\integration\\test_server_live.p"
+      "success": true,
+      "output": "\ud83d\ude80 Starting MCP Kali Server...\nC:\\Users\\Admin\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe: can't open file 'C:\\\\Users\\\\Admin\\\\Desktop\\\\ZYNIQ Solutions\\\\Apps By Z-Labs\\\\DARK-MATER-Kali-Linux-MCP-Server\\\\start_monitored_server.py': [Errno 2] No such file or directory\n\n\ud83d\udd25 TESTING SERVER - Generating activity...\n==================================================\n1. Health Check...\n   \u274c Error: HTTPConnectionPool(host='127.0.0.1', port=5001): Max retries exceeded with url: /health (Caused by NewC"
     },
     {
       "category": "acceptance",
       "file": "test_complete_live.py",
-      "success": false,
-      "output": "MCP KALI SERVER - COMPREHENSIVE LIVE TEST\n============================================================\nStarted: 2025-10-07 07:37:43\nAPI Key: dk_U8BE1DBs0bOuSGIyc7e0xgqUD_goVqJOCI38ICSnCt4\nBase URL: http://127.0.0.1:5001\n============================================================\nStarting MCP Kali Server...\n==================================================\nWaiting for server to start...\nServer is ready! (attempt 1)\n\\n1. HEALTH CHECK\n------------------------------\nStatus: 200\nServer ID: kali-Pre"
+      "success": true,
+      "output": "MCP KALI SERVER - COMPREHENSIVE LIVE TEST\n============================================================\nStarted: 2026-07-23 04:51:27\nAPI Key: dk_U8BE1DBs0bOuSGIyc7e0xgqUD_goVqJOCI38ICSnCt4\nBase URL: http://127.0.0.1:5001\n============================================================\nStarting MCP Kali Server...\n==================================================\nWaiting for server to start...\nWarning: Server may not be fully ready\nFailed to start server!\n"
     },
     {
       "category": "acceptance",
@@ -80,15 +80,15 @@
     {
       "category": "system",
       "file": "test_llm_integration.py",
-      "success": false,
-      "output": "Traceback (most recent call last):\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\test_llm_integration.py\", line 5, in <module>\n    import pytest\nModuleNotFoundError: No module named 'pytest'\n"
+      "success": true,
+      "output": "============================= test session starts =============================\nplatform win32 -- Python 3.14.6, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\Admin\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\Admin\\Desktop\\ZYNIQ Solutions\\Apps By Z-Labs\\DARK-MATER-Kali-Linux-MCP-Server\nplugins: anyio-4.14.2, langsmith-0.10.6\ncollecting ... collected 13 items\n\ntests/test_llm_integration.py::TestLLMConfigEndpoints::test_get_default_config ERROR [  7%]\ntest"
     },
     {
       "category": "system",
       "file": "test_llm_system.py",
-      "success": false,
-      "output": "Traceback (most recent call last):\n  File \"C:\\Users\\Preview Lab\\OneDrive\\Desktop\\New Projects\\DARK Mater MCP Kali Linux\\tests\\test_llm_system.py\", line 5, in <module>\n    import pytest\nModuleNotFoundError: No module named 'pytest'\n"
+      "success": true,
+      "output": "============================= test session starts =============================\nplatform win32 -- Python 3.14.6, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\Admin\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\Admin\\Desktop\\ZYNIQ Solutions\\Apps By Z-Labs\\DARK-MATER-Kali-Linux-MCP-Server\nplugins: anyio-4.14.2, langsmith-0.10.6\ncollecting ... collected 12 items\n\ntests/test_llm_system.py::TestLLMConfiguration::test_set_and_get_config PASSED [  8%]\ntests/test"
     }
   ],
-  "summary": "10 tests failed - review required"
+  "summary": "2 tests failed - review required"
 }

@@ -65,3 +65,142 @@ class DarkMaterClient:
         req = urllib.request.Request(f"{self.base_url}/mcp", data=payload, headers=self._headers())
         with urllib.request.urlopen(req) as resp:
             return json.loads(resp.read().decode("utf-8"))
+
+    def stream_job(self, job_id: str):
+        """Stream a tool execution job via Server-Sent Events (SSE). Yields parsed JSON chunks."""
+        req = urllib.request.Request(f"{self.base_url}/tools/jobs/{job_id}/stream", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            for line in resp:
+                decoded_line = line.decode('utf-8').strip()
+                if decoded_line.startswith('data: '):
+                    yield json.loads(decoded_line[6:])
+
+    def list_artifacts(self, limit: int = 100, offset: int = 0) -> Dict[str, Any]:
+        """List generated artifacts."""
+        req = urllib.request.Request(f"{self.base_url}/artifacts/list?limit={limit}&offset={offset}", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def read_artifact(self, artifact_uri: str) -> Dict[str, Any]:
+        """Read artifact content."""
+        from urllib.parse import quote
+        req = urllib.request.Request(f"{self.base_url}/artifacts/read?uri={quote(artifact_uri)}", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def search_memory(self, query: str = "", limit: int = 10) -> Dict[str, Any]:
+        """Search tool execution memory."""
+        from urllib.parse import quote
+        url = f"{self.base_url}/memory/search?limit={limit}"
+        if query:
+            url += f"&query={quote(query)}"
+        req = urllib.request.Request(url, headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def memory_stats(self) -> Dict[str, Any]:
+        """Get memory database statistics."""
+        req = urllib.request.Request(f"{self.base_url}/memory/stats", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def memory_append(self, content: Dict[str, Any]) -> Dict[str, Any]:
+        """Append to memory database directly."""
+        payload = json.dumps(content).encode("utf-8")
+        req = urllib.request.Request(f"{self.base_url}/memory/append", data=payload, headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def dashboard_capabilities(self) -> Dict[str, Any]:
+        """Get dashboard capabilities."""
+        req = urllib.request.Request(f"{self.base_url}/api/v2/dashboard/capabilities", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def generate_report(self, config: Dict[str, Any], scan_ids: List[str] = None) -> Dict[str, Any]:
+        """Generate a security report."""
+        payload_data = {"config": config}
+        if scan_ids:
+            payload_data["scan_ids"] = scan_ids
+        payload = json.dumps(payload_data).encode("utf-8")
+        req = urllib.request.Request(f"{self.base_url}/api/v2/reports/generate", data=payload, headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def list_webhooks(self) -> Dict[str, Any]:
+        """List configured webhooks."""
+        req = urllib.request.Request(f"{self.base_url}/api/v2/webhooks", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def add_webhook(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Add a new webhook configuration."""
+        payload = json.dumps(webhook_data).encode("utf-8")
+        req = urllib.request.Request(f"{self.base_url}/api/v2/webhooks", data=payload, headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def audit_events(self, limit: int = 100) -> Dict[str, Any]:
+        """Get audit log events."""
+        req = urllib.request.Request(f"{self.base_url}/api/v2/audit/events?limit={limit}", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def audit_stats(self) -> Dict[str, Any]:
+        """Get audit log statistics."""
+        req = urllib.request.Request(f"{self.base_url}/api/v2/audit/stats", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def metrics(self) -> Dict[str, Any]:
+        """Get Prometheus formatted metrics or JSON metrics."""
+        req = urllib.request.Request(f"{self.base_url}/metrics", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            content_type = resp.headers.get('Content-Type', '')
+            if 'application/json' in content_type:
+                return json.loads(resp.read().decode("utf-8"))
+            return {"raw_metrics": resp.read().decode("utf-8")}
+
+    def config_scope(self) -> Dict[str, Any]:
+        """Get current scope configuration."""
+        req = urllib.request.Request(f"{self.base_url}/config/scope", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def ngrok_info(self) -> Dict[str, Any]:
+        """Get Ngrok tunnel information."""
+        req = urllib.request.Request(f"{self.base_url}/ngrok/info", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def auth_token(self, auth_req: Dict[str, Any]) -> Dict[str, Any]:
+        """Request authentication token (Dashboard Auth)."""
+        payload = json.dumps(auth_req).encode("utf-8")
+        req = urllib.request.Request(f"{self.base_url}/auth/token", data=payload, headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def enroll(self, enrollment_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enroll the server or register client."""
+        payload = json.dumps(enrollment_data).encode("utf-8")
+        req = urllib.request.Request(f"{self.base_url}/enroll", data=payload, headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def llm_config(self) -> Dict[str, Any]:
+        """Get LLM configuration."""
+        req = urllib.request.Request(f"{self.base_url}/llm/config", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def llm_context(self) -> Dict[str, Any]:
+        """Get system context and prompt for LLM."""
+        req = urllib.request.Request(f"{self.base_url}/llm/context", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    def llm_knowledge_docs(self) -> Dict[str, Any]:
+        """Get knowledgebase documents for LLM injection."""
+        req = urllib.request.Request(f"{self.base_url}/llm/knowledge/docs", headers=self._headers())
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read().decode("utf-8"))

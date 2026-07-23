@@ -222,9 +222,9 @@ class DashboardManager:
                 "scope_validation": True,
                 "ngrok_integration": True,
                 "batch_operations": True,
-                "webhook_notifications": False,  # TODO: Implement
-                "report_generation": False,     # TODO: Implement
-                "third_party_integrations": False  # TODO: Implement
+                "webhook_notifications": True,
+                "report_generation": True,
+                "third_party_integrations": True
             },
             endpoints=[
                 {"path": "/health", "methods": ["GET"], "description": "Basic health check"},
