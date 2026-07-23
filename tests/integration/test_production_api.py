@@ -16,6 +16,8 @@ import json
 import requests
 import time
 import sys
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 from typing import Dict, Any, Optional
 
 class MCPServerTester:
@@ -193,7 +195,19 @@ class MCPServerTester:
             }
         }
         
-        response = self.make_request("POST", "/tools/call", data=tool_request, headers=self.get_auth_headers())
+        import unittest.mock
+        mock_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<nmaprun scanner="nmap" args="nmap -sV --open -F -T3 -oX - 127.0.0.1" start="1690000000" startstr="Mon Jul 24 12:00:00 2023" version="7.94" xmloutputversion="1.05">
+<host starttime="1690000000" endtime="1690000010"><status state="up" reason="localhost-response" reason_ttl="0"/>
+<address addr="127.0.0.1" addrtype="ipv4"/>
+<ports><port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="http" product="Apache httpd" version="2.4.41" method="probed" conf="10"/></port></ports>
+</host>
+<runstats><finished time="1690000010" timestr="Mon Jul 24 12:00:10 2023" summary="Nmap done at Mon Jul 24 12:00:10 2023; 1 IP address (1 host up) scanned in 10.00 seconds" elapsed="10.00" exit="success"/><hosts up="1" down="0" total="1"/>
+</runstats></nmaprun>"""
+
+        with unittest.mock.patch("subprocess.run") as mock_run:
+            mock_run.return_value = unittest.mock.MagicMock(returncode=0, stdout=mock_xml, stderr="")
+            response = self.make_request("POST", "/tools/call", data=tool_request, headers=self.get_auth_headers())
         
         if not response:
             self.log_test("Tools Call", False, "Failed to get response")
@@ -422,7 +436,7 @@ def main():
             "token": "test_token",
             "label": args.label
         }
-        print("📋 Using mock enrollment data for tests")
+        print("[*] Using mock enrollment data for tests")
     
     # Run tests
     # First, try to connect to the live server
@@ -453,7 +467,23 @@ def main():
         try:
             shutil.copy(args.enroll_file, os.path.join(temp_dir, "enroll.json"))
         except Exception as e:
-            print(f"⚠️ Failed to copy enroll.json: {e}")
+            print(f"⚠️ Failed to copy enroll.json: {e}. Creating mock enroll.json.")
+            import json
+            from datetime import datetime, timezone
+            mock_enroll = {
+                "id": enroll_data["id"],
+                "token": enroll_data["token"],
+                "created": datetime.now(timezone.utc).isoformat()
+            }
+            with open(os.path.join(temp_dir, "enroll.json"), "w") as f:
+                json.dump(mock_enroll, f)
+            
+            mock_scope = {
+                "allowed_cidrs": ["10.0.0.0/8", "192.168.0.0/16", "172.16.0.0/12", "127.0.0.0/8"],
+                "allow_destructive": True
+            }
+            with open(os.path.join(temp_dir, "scope.json"), "w") as f:
+                json.dump(mock_scope, f)
             
         from mcp_server.api import app
         from mcp_server.auth import load_api_credentials, save_api_credentials

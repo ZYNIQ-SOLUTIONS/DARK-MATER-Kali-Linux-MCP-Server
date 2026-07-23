@@ -54,6 +54,17 @@ RUN apt-get update && \
             exploitdb \
             ssh-audit \
             netcat-traditional \
+            aircrack-ng \
+            wifite \
+            bluez \
+            set \
+            impacket-scripts \
+            crackmapexec \
+            nuclei \
+            ffuf \
+            amass \
+            theharvester \
+            peass \
         && break || \
         (echo "apt-get install failed, retrying in 10s (attempt $i)..." && sleep 10 && apt-get update); \
     done && \
@@ -84,4 +95,4 @@ RUN mkdir -p /etc/mcp-kali /var/lib/mcp/artifacts /var/lib/mcp/memory && \
 EXPOSE 5000
 
 # Default command
-CMD ["python3", "kali_server.py", "--bind", "0.0.0.0:5000"]
+CMD ["python3", "-m", "mcp_server.api"]

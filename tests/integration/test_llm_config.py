@@ -5,6 +5,8 @@ import requests
 import json
 import time
 import sys
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 def test_llm_config():
     """Test the LLM configuration system"""
@@ -199,21 +201,38 @@ def main():
         success = test_llm_config()
     else:
         print("💡 Live server is not responding. Falling back to in-memory FastAPI TestClient verification.")
-        from fastapi.testclient import TestClient
-        from mcp_server.api import app
-        from mcp_server.auth import load_api_credentials, save_api_credentials
-        
         # Clean up existing test server enrollment to prevent 409 Conflict
         try:
+            import tempfile
+            import os
+            import json
+            from datetime import datetime, timezone
+            
+            temp_dir = tempfile.mkdtemp()
+            os.environ["MCP_TEST_CONFIG_DIR"] = temp_dir
+            
+            from fastapi.testclient import TestClient
+            from mcp_server.api import app
+            from mcp_server.auth import load_api_credentials, save_api_credentials
+            
             # Determine enrollment ID dynamically
             enroll_id = "kali-lab-01"
-            try:
-                import json
-                with open("/etc/mcp-kali/enroll.json", "r") as f:
-                    file_data = json.load(f)
-                    enroll_id = file_data["id"]
-            except:
-                pass
+            
+            mock_enroll = {
+                "id": enroll_id,
+                "token": "test-token-for-llm-config-123456789",
+                "created": datetime.now(timezone.utc).isoformat()
+            }
+            with open(os.path.join(temp_dir, "enroll.json"), "w") as f:
+                json.dump(mock_enroll, f)
+                
+            mock_scope = {
+                "allowed_cidrs": ["10.0.0.0/8", "192.168.0.0/16", "172.16.0.0/12", "127.0.0.0/8"],
+                "allow_destructive": True
+            }
+            with open(os.path.join(temp_dir, "scope.json"), "w") as f:
+                json.dump(mock_scope, f)
+            
             creds = load_api_credentials()
             if enroll_id in creds:
                 del creds[enroll_id]

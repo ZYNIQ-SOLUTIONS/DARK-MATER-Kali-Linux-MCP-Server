@@ -15,7 +15,9 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 
 # Configuration path - handle both Windows and Linux
-if os.name == 'nt':  # Windows
+if os.environ.get("MCP_TEST_CONFIG_DIR"):
+    SCOPE_CONFIG_FILE = Path(os.environ["MCP_TEST_CONFIG_DIR"]) / "scope.json"
+elif os.name == 'nt':  # Windows
     SCOPE_CONFIG_FILE = Path.home() / ".mcp-kali" / "scope.json"
 else:  # Linux/Unix
     SCOPE_CONFIG_FILE = Path("/etc/mcp-kali/scope.json")

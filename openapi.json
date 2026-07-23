@@ -1,2547 +1,1666 @@
 {
-  "openapi": "3.1.0",
-  "info": {
-    "title": "MCP Kali Server",
-    "description": "Production-ready security testing server with enrollment and artifact storage",
-    "version": "2.0.0"
-  },
-  "paths": {
-    "/enroll": {
-      "post": {
-        "summary": "Enroll Endpoint",
-        "description": "Enroll a new server and generate API credentials.\n\nThis endpoint is public and uses the enrollment token for authentication.",
-        "operationId": "enroll_endpoint_enroll_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EnrollmentRequest"
-              }
-            }
-          },
-          "required": true
+    "info": {
+        "name": "DARK MATTER MCP Server API",
+        "description": "API Endpoints for Kali Linux MCP Server",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:5000",
+            "type": "string"
         },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnrollmentResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
+        {
+            "key": "api_key",
+            "value": "your_api_key_here",
+            "type": "string"
         }
-      }
-    },
-    "/auth/token": {
-      "post": {
-        "summary": "Create Access Token",
-        "description": "Generate JWT token for dashboard authentication using API key.",
-        "operationId": "create_access_token_auth_token_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TokenRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/health": {
-      "get": {
-        "summary": "Health Check",
-        "description": "Health check endpoint with server capabilities.\n\nReturns server status and available capabilities.",
-        "operationId": "health_check_health_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HealthResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/tools/list": {
-      "get": {
-        "summary": "Tools List Endpoint",
-        "description": "Get list of available tools with metadata.\n\nReturns tool names, descriptions, and schema references.",
-        "operationId": "tools_list_endpoint_tools_list_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/tools/call": {
-      "post": {
-        "summary": "Tools Call Endpoint",
-        "description": "Execute a tool with the provided arguments.\n\nValidates arguments against schema and checks scope/destructiveness.",
-        "operationId": "tools_call_endpoint_tools_call_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ToolCallRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/mcp": {
-      "post": {
-        "summary": "Openmcp Jsonrpc Endpoint",
-        "description": "OpenMCP Standard JSON-RPC 2.0 endpoint for native MCP client compatibility.",
-        "operationId": "openmcp_jsonrpc_endpoint_mcp_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Request"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/tools/jobs": {
-      "post": {
-        "summary": "Submit Tool Job",
-        "description": "Submit a tool for asynchronous background execution.\n\nReturns a job_id immediately, which can be polled for status.",
-        "operationId": "submit_tool_job_tools_jobs_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ToolCallRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/tools/jobs/{job_id}": {
-      "get": {
-        "summary": "Get Job Status",
-        "description": "Poll the status of an asynchronous background job.",
-        "operationId": "get_job_status_tools_jobs__job_id__get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/tools/jobs/{job_id}/stream": {
-      "get": {
-        "summary": "Stream Job Sse",
-        "description": "Stream live Server-Sent Events (SSE) status for an async job.",
-        "operationId": "stream_job_sse_tools_jobs__job_id__stream_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/tools/jobs/{job_id}/analyze": {
-      "post": {
-        "summary": "Analyze Job",
-        "description": "Analyze a completed job using AI.",
-        "operationId": "analyze_job_tools_jobs__job_id__analyze_post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/tools/jobs/{job_id}/suggestions": {
-      "get": {
-        "summary": "Get Next Tool Suggestions",
-        "description": "Get AI suggestions for next tools to run.",
-        "operationId": "get_next_tool_suggestions_tools_jobs__job_id__suggestions_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/tools/analysis/executive-summary": {
-      "post": {
-        "summary": "Generate Executive Summary",
-        "description": "Generate an executive summary of multiple jobs.",
-        "operationId": "generate_executive_summary_tools_analysis_executive_summary_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Request"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/llm/config": {
-      "get": {
-        "summary": "Get Llm Config",
-        "description": "Get LLM configuration for this server.",
-        "operationId": "get_llm_config_llm_config_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "summary": "Update Llm Config",
-        "description": "Update LLM configuration with optimistic concurrency control.",
-        "operationId": "update_llm_config_llm_config_put",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "if_match",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
+    ],
+    "item": [
+        {
+            "name": "Enroll Endpoint",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/enroll",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "enroll"
+                    ],
+                    "variable": [],
+                    "query": []
                 },
-                {
-                  "type": "null"
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"id\": \"string\",\n    \"token\": \"string\",\n    \"label\": \"string\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
                 }
-              ],
-              "title": "If Match"
             }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LLMConfigRequest"
-              }
-            }
-          }
         },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/llm/config/etag": {
-      "get": {
-        "summary": "Get Config Etag",
-        "description": "Get ETag for configuration caching.",
-        "operationId": "get_config_etag_llm_config_etag_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/llm/knowledge/docs": {
-      "post": {
-        "summary": "Create Knowledge Doc",
-        "description": "Create a new knowledge document.",
-        "operationId": "create_knowledge_doc_llm_knowledge_docs_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/KnowledgeDocRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/llm/knowledge/docs/{doc_id}": {
-      "put": {
-        "summary": "Update Knowledge Doc",
-        "description": "Update knowledge document metadata.",
-        "operationId": "update_knowledge_doc_llm_knowledge_docs__doc_id__put",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "doc_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Doc Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/KnowledgeDocRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete Knowledge Doc",
-        "description": "Delete a knowledge document and its chunks.",
-        "operationId": "delete_knowledge_doc_llm_knowledge_docs__doc_id__delete",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "doc_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Doc Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/llm/knowledge/docs/{doc_id}/chunks": {
-      "post": {
-        "summary": "Add Knowledge Chunks",
-        "description": "Add text chunks to a knowledge document.",
-        "operationId": "add_knowledge_chunks_llm_knowledge_docs__doc_id__chunks_post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "doc_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Doc Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/KnowledgeChunksRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/llm/knowledge/search": {
-      "get": {
-        "summary": "Search Knowledge",
-        "description": "Search knowledge base using FTS5.",
-        "operationId": "search_knowledge_llm_knowledge_search_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "q",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Search query",
-              "title": "Q"
-            },
-            "description": "Search query"
-          },
-          {
-            "name": "top_k",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 20,
-              "minimum": 1,
-              "description": "Number of results to return",
-              "default": 4,
-              "title": "Top K"
-            },
-            "description": "Number of results to return"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/llm/knowledge/reindex": {
-      "post": {
-        "summary": "Reindex Knowledge",
-        "description": "Rebuild knowledge search index.",
-        "operationId": "reindex_knowledge_llm_knowledge_reindex_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/memory/retrieve": {
-      "get": {
-        "summary": "Retrieve Memory",
-        "description": "Retrieve conversation memory for a thread.",
-        "operationId": "retrieve_memory_memory_retrieve_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "thread_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Thread ID",
-              "title": "Thread Id"
-            },
-            "description": "Thread ID"
-          },
-          {
-            "name": "q",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
+        {
+            "name": "Create Access Token",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/auth/token",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "token"
+                    ],
+                    "variable": [],
+                    "query": []
                 },
-                {
-                  "type": "null"
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"api_key\": \"string\",\n    \"client_fingerprint\": \"string\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
                 }
-              ],
-              "description": "Optional query for semantic snippets",
-              "title": "Q"
-            },
-            "description": "Optional query for semantic snippets"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 50,
-              "minimum": 1,
-              "description": "Number of turns to retrieve",
-              "default": 8,
-              "title": "Limit"
-            },
-            "description": "Number of turns to retrieve"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/memory/append": {
-      "post": {
-        "summary": "Append Memory",
-        "description": "Append a conversation turn to memory.",
-        "operationId": "append_memory_memory_append_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MemoryAppendRequest"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+        {
+            "name": "Health Check",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/health",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "health"
+                    ],
+                    "variable": [],
+                    "query": []
                 }
-              }
             }
-          }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/memory/summarize": {
-      "post": {
-        "summary": "Summarize Memory",
-        "description": "Create a memory summary and optionally clean old turns.",
-        "operationId": "summarize_memory_memory_summarize_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MemorySummarizeRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+        {
+            "name": "Tools List Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/tools/list",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "tools",
+                        "list"
+                    ],
+                    "variable": [],
+                    "query": []
                 }
-              }
             }
-          }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/llm/context": {
-      "get": {
-        "summary": "Get Live Context",
-        "description": "Get dynamic server context for better LLM responses.",
-        "operationId": "get_live_context_llm_context_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/artifacts/list": {
-      "get": {
-        "summary": "Artifacts List Endpoint",
-        "description": "List artifacts for the authenticated server.\n\nSupports pagination with limit and offset parameters.",
-        "operationId": "artifacts_list_endpoint_artifacts_list_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 50,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/artifacts/read": {
-      "get": {
-        "summary": "Artifacts Read Endpoint",
-        "description": "Read artifact content by URI.\n\nValidates that the artifact belongs to the authenticated server.",
-        "operationId": "artifacts_read_endpoint_artifacts_read_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "uri",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Artifact URI to read",
-              "title": "Uri"
-            },
-            "description": "Artifact URI to read"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/memory/search": {
-      "get": {
-        "summary": "Memory Search Endpoint",
-        "description": "Search memory observations for the authenticated server.\n\nSupports text search and filtering by observation kind.",
-        "operationId": "memory_search_endpoint_memory_search_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "query",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
+        {
+            "name": "Tools Call Endpoint",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/tools/call",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "tools",
+                        "call"
+                    ],
+                    "variable": [],
+                    "query": []
                 },
-                {
-                  "type": "null"
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"string\",\n    \"arguments\": \"object\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
                 }
-              ],
-              "description": "Search query",
-              "title": "Query"
-            },
-            "description": "Search query"
-          },
-          {
-            "name": "kind",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
+            }
+        },
+        {
+            "name": "Openmcp Jsonrpc Endpoint",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/mcp",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "mcp"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Submit Tool Job",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/tools/jobs",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "tools",
+                        "jobs"
+                    ],
+                    "variable": [],
+                    "query": []
                 },
-                {
-                  "type": "null"
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"string\",\n    \"arguments\": \"object\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
                 }
-              ],
-              "description": "Observation kind filter",
-              "title": "Kind"
-            },
-            "description": "Observation kind filter"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 50,
-              "title": "Limit"
             }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+        },
+        {
+            "name": "Get Job Status",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/tools/jobs/{job_id}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "tools",
+                        "jobs",
+                        "{job_id}"
+                    ],
+                    "variable": [
+                        {
+                            "key": "job_id",
+                            "value": "<job_id>"
+                        }
+                    ],
+                    "query": []
                 }
-              }
             }
-          }
-        }
-      }
-    },
-    "/memory/stats": {
-      "get": {
-        "summary": "Memory Stats Endpoint",
-        "description": "Get memory statistics for the authenticated server.\n\nReturns counts and breakdowns of stored observations.",
-        "operationId": "memory_stats_endpoint_memory_stats_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/config/scope": {
-      "get": {
-        "summary": "Scope Config Endpoint",
-        "description": "Get current scope configuration.\n\nReturns allowed CIDRs and destructive operation settings.",
-        "operationId": "scope_config_endpoint_config_scope_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/ngrok/info": {
-      "get": {
-        "summary": "Ngrok Info Endpoint",
-        "description": "Get ngrok tunnel information.\n\nReturns current tunnel status and public URL.",
-        "operationId": "ngrok_info_endpoint_ngrok_info_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/ngrok/metrics": {
-      "get": {
-        "summary": "Ngrok Metrics Endpoint",
-        "description": "Get ngrok tunnel metrics.\n\nReturns connection and traffic statistics if available.",
-        "operationId": "ngrok_metrics_endpoint_ngrok_metrics_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v2/metrics": {
-      "get": {
-        "summary": "Get Metrics Endpoint",
-        "description": "Get comprehensive server metrics.\n\nReturns request metrics, tool metrics, and system metrics.",
-        "operationId": "get_metrics_endpoint_api_v2_metrics_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/metrics": {
-      "get": {
-        "summary": "Get Prometheus Metrics Endpoint",
-        "description": "Get Prometheus-compatible server metrics.\n\nThis endpoint is designed to be scraped by Prometheus or similar monitoring tools.\nIt intentionally does NOT require an API key to allow local scrapers to work easily,\nbut in production, it should be restricted via network policies.",
-        "operationId": "get_prometheus_metrics_endpoint_metrics_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "string"
+        {
+            "name": "Stream Job Sse",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/tools/jobs/{job_id}/stream",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "tools",
+                        "jobs",
+                        "{job_id}",
+                        "stream"
+                    ],
+                    "variable": [
+                        {
+                            "key": "job_id",
+                            "value": "<job_id>"
+                        }
+                    ],
+                    "query": []
                 }
-              }
             }
-          }
-        }
-      }
-    },
-    "/api/v2/audit/events": {
-      "get": {
-        "summary": "Get Audit Events",
-        "description": "Get audit events with optional filtering.\n\nProvides comprehensive audit trail for compliance and security monitoring.",
-        "operationId": "get_audit_events_api_v2_audit_events_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "event_type",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
+        },
+        {
+            "name": "Analyze Job",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/tools/jobs/{job_id}/analyze",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "tools",
+                        "jobs",
+                        "{job_id}",
+                        "analyze"
+                    ],
+                    "variable": [
+                        {
+                            "key": "job_id",
+                            "value": "<job_id>"
+                        }
+                    ],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Get Next Tool Suggestions",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/tools/jobs/{job_id}/suggestions",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "tools",
+                        "jobs",
+                        "{job_id}",
+                        "suggestions"
+                    ],
+                    "variable": [
+                        {
+                            "key": "job_id",
+                            "value": "<job_id>"
+                        }
+                    ],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Generate Executive Summary",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/tools/analysis/executive-summary",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "tools",
+                        "analysis",
+                        "executive-summary"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Get Llm Config",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/llm/config",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "llm",
+                        "config"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Update Llm Config",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/llm/config",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "llm",
+                        "config"
+                    ],
+                    "variable": [],
+                    "query": [
+                        {
+                            "key": "if_match",
+                            "value": ""
+                        }
+                    ]
                 },
-                {
-                  "type": "null"
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"system_prompt\": \"string\",\n    \"guardrails\": \"string\",\n    \"runtime_hints\": \"string\",\n    \"tools_allowed\": \"string\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
                 }
-              ],
-              "description": "Filter by event type",
-              "title": "Event Type"
-            },
-            "description": "Filter by event type"
-          },
-          {
-            "name": "user_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
+            }
+        },
+        {
+            "name": "Get Config Etag",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/llm/config/etag",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "llm",
+                        "config",
+                        "etag"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Create Knowledge Doc",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/llm/knowledge/docs",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "llm",
+                        "knowledge",
+                        "docs"
+                    ],
+                    "variable": [],
+                    "query": []
                 },
-                {
-                  "type": "null"
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"title\": \"string\",\n    \"source\": \"string\",\n    \"tags\": \"string\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
                 }
-              ],
-              "description": "Filter by user ID",
-              "title": "User Id"
-            },
-            "description": "Filter by user ID"
-          },
-          {
-            "name": "severity",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
+            }
+        },
+        {
+            "name": "Update Knowledge Doc",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/llm/knowledge/docs/{doc_id}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "llm",
+                        "knowledge",
+                        "docs",
+                        "{doc_id}"
+                    ],
+                    "variable": [
+                        {
+                            "key": "doc_id",
+                            "value": "<doc_id>"
+                        }
+                    ],
+                    "query": []
                 },
-                {
-                  "type": "null"
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"title\": \"string\",\n    \"source\": \"string\",\n    \"tags\": \"string\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
                 }
-              ],
-              "description": "Filter by severity",
-              "title": "Severity"
-            },
-            "description": "Filter by severity"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "description": "Maximum number of results",
-              "default": 50,
-              "title": "Limit"
-            },
-            "description": "Maximum number of results"
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "description": "Offset for pagination",
-              "default": 0,
-              "title": "Offset"
-            },
-            "description": "Offset for pagination"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+        },
+        {
+            "name": "Delete Knowledge Doc",
+            "request": {
+                "method": "DELETE",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/llm/knowledge/docs/{doc_id}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "llm",
+                        "knowledge",
+                        "docs",
+                        "{doc_id}"
+                    ],
+                    "variable": [
+                        {
+                            "key": "doc_id",
+                            "value": "<doc_id>"
+                        }
+                    ],
+                    "query": []
                 }
-              }
             }
-          }
-        }
-      }
-    },
-    "/api/v2/audit/stats": {
-      "get": {
-        "summary": "Get Audit Stats",
-        "description": "Get audit event statistics.\n\nReturns summary statistics for audit events over the specified period.",
-        "operationId": "get_audit_stats_api_v2_audit_stats_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "days",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "description": "Number of days to include in statistics",
-              "default": 7,
-              "title": "Days"
-            },
-            "description": "Number of days to include in statistics"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/health/detailed": {
-      "get": {
-        "summary": "Detailed Health Endpoint",
-        "description": "Get detailed health information including system metrics.\n\nProvides comprehensive health status for monitoring dashboards.",
-        "operationId": "detailed_health_endpoint_health_detailed_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v2/dashboard/auth": {
-      "post": {
-        "summary": "Dashboard Auth Endpoint",
-        "description": "Authenticate DARK MATTER MCP Client dashboard.\n\nProvides specialized authentication for the dashboard with signature verification.",
-        "operationId": "dashboard_auth_endpoint_api_v2_dashboard_auth_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DashboardAuthRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v2/dashboard/capabilities": {
-      "get": {
-        "summary": "Dashboard Capabilities Endpoint",
-        "description": "Get dashboard capabilities and available features.\n\nPublic endpoint that provides information about server capabilities.",
-        "operationId": "dashboard_capabilities_endpoint_api_v2_dashboard_capabilities_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v2/dashboard/data": {
-      "get": {
-        "summary": "Dashboard Data Endpoint",
-        "description": "Get aggregated data for dashboard display.\n\nProvides comprehensive data optimized for dashboard consumption.",
-        "operationId": "dashboard_data_endpoint_api_v2_dashboard_data_get",
-        "parameters": [
-          {
-            "name": "dashboard_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Dashboard ID",
-              "title": "Dashboard Id"
-            },
-            "description": "Dashboard ID"
-          },
-          {
-            "name": "connection_token",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Dashboard connection token",
-              "title": "Connection Token"
-            },
-            "description": "Dashboard connection token"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v2/license/status": {
-      "get": {
-        "summary": "License Status Endpoint",
-        "description": "Get current license status and information.\n\nReturns licensing information for compliance and monitoring.",
-        "operationId": "license_status_endpoint_api_v2_license_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/info": {
-      "get": {
-        "summary": "Server Info Endpoint",
-        "description": "Get server information and statistics.\n\nReturns comprehensive server status and usage statistics.",
-        "operationId": "server_info_endpoint_info_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/": {
-      "get": {
-        "summary": "Root",
-        "description": "Root endpoint with basic server information.",
-        "operationId": "root__get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
-    "/status": {
-      "get": {
-        "summary": "Status Endpoint",
-        "description": "Public status endpoint for basic health monitoring.\n\nDoes not require authentication - suitable for load balancers.",
-        "operationId": "status_endpoint_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v2/webhooks": {
-      "get": {
-        "summary": "List Webhooks Endpoint",
-        "description": "List all configured webhooks.",
-        "operationId": "list_webhooks_endpoint_api_v2_webhooks_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      },
-      "post": {
-        "summary": "Add Webhook Endpoint",
-        "description": "Add a new webhook configuration.",
-        "operationId": "add_webhook_endpoint_api_v2_webhooks_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Webhook Data"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v2/reports/generate": {
-      "post": {
-        "summary": "Generate Report Endpoint",
-        "description": "Generate a comprehensive security report.",
-        "operationId": "generate_report_endpoint_api_v2_reports_generate_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Report Request"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v2/tools/templates": {
-      "get": {
-        "summary": "Get Tool Templates Endpoint",
-        "description": "Get pre-configured tool execution templates.",
-        "operationId": "get_tool_templates_endpoint_api_v2_tools_templates_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/api/tools": {
-      "get": {
-        "summary": "Get Available Tools",
-        "description": "Get list of available pentesting tools from the modular registry.",
-        "operationId": "get_available_tools_api_tools_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "category",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
+        {
+            "name": "Add Knowledge Chunks",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/llm/knowledge/docs/{doc_id}/chunks",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "llm",
+                        "knowledge",
+                        "docs",
+                        "{doc_id}",
+                        "chunks"
+                    ],
+                    "variable": [
+                        {
+                            "key": "doc_id",
+                            "value": "<doc_id>"
+                        }
+                    ],
+                    "query": []
                 },
-                {
-                  "type": "null"
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"chunks\": \"array\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
                 }
-              ],
-              "title": "Category"
             }
-          },
-          {
-            "name": "available_only",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": true,
-              "title": "Available Only"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+        },
+        {
+            "name": "Search Knowledge",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/llm/knowledge/search",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "llm",
+                        "knowledge",
+                        "search"
+                    ],
+                    "variable": [],
+                    "query": [
+                        {
+                            "key": "q",
+                            "value": ""
+                        },
+                        {
+                            "key": "top_k",
+                            "value": 4
+                        }
+                    ]
                 }
-              }
             }
-          }
-        }
-      }
-    },
-    "/api/tools/{tool_name}": {
-      "get": {
-        "summary": "Get Tool Details",
-        "description": "Get detailed information about a specific tool.",
-        "operationId": "get_tool_details_api_tools__tool_name__get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "tool_name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Tool Name"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+        },
+        {
+            "name": "Reindex Knowledge",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/llm/knowledge/reindex",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "llm",
+                        "knowledge",
+                        "reindex"
+                    ],
+                    "variable": [],
+                    "query": []
                 }
-              }
             }
-          }
-        }
-      }
-    },
-    "/api/tools/run": {
-      "post": {
-        "summary": "Run Tool Endpoint",
-        "description": "Start a tool execution job.",
-        "operationId": "run_tool_endpoint_api_tools_run_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Request"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+        {
+            "name": "Retrieve Memory",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/memory/retrieve",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "memory",
+                        "retrieve"
+                    ],
+                    "variable": [],
+                    "query": [
+                        {
+                            "key": "thread_id",
+                            "value": ""
+                        },
+                        {
+                            "key": "q",
+                            "value": ""
+                        },
+                        {
+                            "key": "limit",
+                            "value": 8
+                        }
+                    ]
                 }
-              }
             }
-          }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/api/tools/jobs/{job_id}": {
-      "get": {
-        "summary": "Get Job Status Endpoint",
-        "description": "Get the status and results of a tool execution job.",
-        "operationId": "get_job_status_endpoint_api_tools_jobs__job_id__get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/tools/jobs/{job_id}/stream": {
-      "get": {
-        "summary": "Stream Job Output Endpoint",
-        "description": "Stream live output from a running job.",
-        "operationId": "stream_job_output_endpoint_api_tools_jobs__job_id__stream_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/tools/jobs/{job_id}/cancel": {
-      "post": {
-        "summary": "Cancel Job Endpoint",
-        "description": "Cancel a running job.",
-        "operationId": "cancel_job_endpoint_api_tools_jobs__job_id__cancel_post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "DashboardAuthRequest": {
-        "properties": {
-          "dashboard_id": {
-            "type": "string",
-            "title": "Dashboard Id"
-          },
-          "api_key": {
-            "type": "string",
-            "title": "Api Key"
-          },
-          "signature": {
-            "type": "string",
-            "title": "Signature"
-          },
-          "timestamp": {
-            "type": "integer",
-            "title": "Timestamp"
-          }
-        },
-        "type": "object",
-        "required": [
-          "dashboard_id",
-          "api_key",
-          "signature",
-          "timestamp"
-        ],
-        "title": "DashboardAuthRequest",
-        "description": "Dashboard authentication request."
-      },
-      "EnrollmentRequest": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "token": {
-            "type": "string",
-            "title": "Token"
-          },
-          "label": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Label"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "token"
-        ],
-        "title": "EnrollmentRequest",
-        "description": "Enrollment request model."
-      },
-      "EnrollmentResponse": {
-        "properties": {
-          "server_id": {
-            "type": "string",
-            "title": "Server Id"
-          },
-          "api_key": {
-            "type": "string",
-            "title": "Api Key"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label"
-          }
-        },
-        "type": "object",
-        "required": [
-          "server_id",
-          "api_key",
-          "label"
-        ],
-        "title": "EnrollmentResponse",
-        "description": "Enrollment response model."
-      },
-      "HTTPValidationError": {
-        "properties": {
-          "detail": {
-            "items": {
-              "$ref": "#/components/schemas/ValidationError"
-            },
-            "type": "array",
-            "title": "Detail"
-          }
-        },
-        "type": "object",
-        "title": "HTTPValidationError"
-      },
-      "HealthResponse": {
-        "properties": {
-          "ok": {
-            "type": "boolean",
-            "title": "Ok"
-          },
-          "server_id": {
-            "type": "string",
-            "title": "Server Id"
-          },
-          "caps": {
-            "additionalProperties": {
-              "type": "boolean"
-            },
-            "type": "object",
-            "title": "Caps"
-          },
-          "time": {
-            "type": "string",
-            "title": "Time"
-          },
-          "version": {
-            "type": "string",
-            "title": "Version",
-            "default": "2.0.0"
-          }
-        },
-        "type": "object",
-        "required": [
-          "ok",
-          "server_id",
-          "caps",
-          "time"
-        ],
-        "title": "HealthResponse",
-        "description": "Health check response model."
-      },
-      "KnowledgeChunksRequest": {
-        "properties": {
-          "chunks": {
-            "items": {},
-            "type": "array",
-            "title": "Chunks"
-          }
-        },
-        "type": "object",
-        "required": [
-          "chunks"
-        ],
-        "title": "KnowledgeChunksRequest",
-        "description": "Request model for adding knowledge chunks."
-      },
-      "KnowledgeDocRequest": {
-        "properties": {
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "source": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Source"
-          },
-          "tags": {
-            "anyOf": [
-              {
-                "items": {},
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tags"
-          }
-        },
-        "type": "object",
-        "required": [
-          "title"
-        ],
-        "title": "KnowledgeDocRequest",
-        "description": "Request model for knowledge document creation."
-      },
-      "LLMConfigRequest": {
-        "properties": {
-          "system_prompt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "System Prompt"
-          },
-          "guardrails": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Guardrails"
-          },
-          "runtime_hints": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Runtime Hints"
-          },
-          "tools_allowed": {
-            "anyOf": [
-              {
-                "items": {},
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tools Allowed"
-          }
-        },
-        "type": "object",
-        "title": "LLMConfigRequest",
-        "description": "Request model for LLM configuration updates."
-      },
-      "MemoryAppendRequest": {
-        "properties": {
-          "thread_id": {
-            "type": "string",
-            "title": "Thread Id"
-          },
-          "role": {
-            "type": "string",
-            "title": "Role"
-          },
-          "content": {
-            "type": "string",
-            "title": "Content"
-          },
-          "meta": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Meta"
-          }
-        },
-        "type": "object",
-        "required": [
-          "thread_id",
-          "role",
-          "content"
-        ],
-        "title": "MemoryAppendRequest",
-        "description": "Request model for appending to memory."
-      },
-      "MemorySummarizeRequest": {
-        "properties": {
-          "thread_id": {
-            "type": "string",
-            "title": "Thread Id"
-          },
-          "summary": {
-            "type": "string",
-            "title": "Summary"
-          }
-        },
-        "type": "object",
-        "required": [
-          "thread_id",
-          "summary"
-        ],
-        "title": "MemorySummarizeRequest",
-        "description": "Request model for memory summarization."
-      },
-      "TokenRequest": {
-        "properties": {
-          "api_key": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Api Key"
-          },
-          "client_fingerprint": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Client Fingerprint"
-          }
-        },
-        "type": "object",
-        "title": "TokenRequest",
-        "description": "Request model for JWT token generation."
-      },
-      "TokenResponse": {
-        "properties": {
-          "access_token": {
-            "type": "string",
-            "title": "Access Token"
-          },
-          "token_type": {
-            "type": "string",
-            "title": "Token Type"
-          },
-          "expires_in": {
-            "type": "integer",
-            "title": "Expires In"
-          },
-          "server_id": {
-            "type": "string",
-            "title": "Server Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "access_token",
-          "token_type",
-          "expires_in",
-          "server_id"
-        ],
-        "title": "TokenResponse",
-        "description": "Response model for JWT token."
-      },
-      "ToolCallRequest": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "arguments": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Arguments"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "arguments"
-        ],
-        "title": "ToolCallRequest",
-        "description": "Request model for tool execution."
-      },
-      "ValidationError": {
-        "properties": {
-          "loc": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "string"
+        {
+            "name": "Append Memory",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/memory/append",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "memory",
+                        "append"
+                    ],
+                    "variable": [],
+                    "query": []
                 },
-                {
-                  "type": "integer"
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"thread_id\": \"string\",\n    \"role\": \"string\",\n    \"content\": \"string\",\n    \"meta\": \"string\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
                 }
-              ]
-            },
-            "type": "array",
-            "title": "Location"
-          },
-          "msg": {
-            "type": "string",
-            "title": "Message"
-          },
-          "type": {
-            "type": "string",
-            "title": "Error Type"
-          },
-          "input": {
-            "title": "Input"
-          },
-          "ctx": {
-            "type": "object",
-            "title": "Context"
-          }
+            }
         },
-        "type": "object",
-        "required": [
-          "loc",
-          "msg",
-          "type"
-        ],
-        "title": "ValidationError"
-      }
-    },
-    "securitySchemes": {
-      "HTTPBearer": {
-        "type": "http",
-        "scheme": "bearer"
-      }
-    }
-  }
+        {
+            "name": "Summarize Memory",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/memory/summarize",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "memory",
+                        "summarize"
+                    ],
+                    "variable": [],
+                    "query": []
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"thread_id\": \"string\",\n    \"summary\": \"string\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Get Live Context",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/llm/context",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "llm",
+                        "context"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Artifacts List Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/artifacts/list",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "artifacts",
+                        "list"
+                    ],
+                    "variable": [],
+                    "query": [
+                        {
+                            "key": "limit",
+                            "value": 50
+                        },
+                        {
+                            "key": "offset",
+                            "value": 0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Artifacts Read Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/artifacts/read",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "artifacts",
+                        "read"
+                    ],
+                    "variable": [],
+                    "query": [
+                        {
+                            "key": "uri",
+                            "value": ""
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Memory Search Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/memory/search",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "memory",
+                        "search"
+                    ],
+                    "variable": [],
+                    "query": [
+                        {
+                            "key": "query",
+                            "value": ""
+                        },
+                        {
+                            "key": "kind",
+                            "value": ""
+                        },
+                        {
+                            "key": "limit",
+                            "value": 50
+                        },
+                        {
+                            "key": "offset",
+                            "value": 0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Memory Stats Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/memory/stats",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "memory",
+                        "stats"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Scope Config Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/config/scope",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "config",
+                        "scope"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Ngrok Info Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/ngrok/info",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "ngrok",
+                        "info"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Ngrok Metrics Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/ngrok/metrics",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "ngrok",
+                        "metrics"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Get Metrics Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v2/metrics",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v2",
+                        "metrics"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Get Prometheus Metrics Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/metrics",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "metrics"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Get Audit Events",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v2/audit/events",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v2",
+                        "audit",
+                        "events"
+                    ],
+                    "variable": [],
+                    "query": [
+                        {
+                            "key": "event_type",
+                            "value": ""
+                        },
+                        {
+                            "key": "user_id",
+                            "value": ""
+                        },
+                        {
+                            "key": "severity",
+                            "value": ""
+                        },
+                        {
+                            "key": "limit",
+                            "value": 50
+                        },
+                        {
+                            "key": "offset",
+                            "value": 0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Get Audit Stats",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v2/audit/stats",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v2",
+                        "audit",
+                        "stats"
+                    ],
+                    "variable": [],
+                    "query": [
+                        {
+                            "key": "days",
+                            "value": 7
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Detailed Health Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/health/detailed",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "health",
+                        "detailed"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Dashboard Auth Endpoint",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v2/dashboard/auth",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v2",
+                        "dashboard",
+                        "auth"
+                    ],
+                    "variable": [],
+                    "query": []
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"dashboard_id\": \"string\",\n    \"api_key\": \"string\",\n    \"signature\": \"string\",\n    \"timestamp\": \"integer\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Dashboard Capabilities Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v2/dashboard/capabilities",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v2",
+                        "dashboard",
+                        "capabilities"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Dashboard Data Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v2/dashboard/data",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v2",
+                        "dashboard",
+                        "data"
+                    ],
+                    "variable": [],
+                    "query": [
+                        {
+                            "key": "dashboard_id",
+                            "value": ""
+                        },
+                        {
+                            "key": "connection_token",
+                            "value": ""
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "License Status Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v2/license/status",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v2",
+                        "license",
+                        "status"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Server Info Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/info",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "info"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Root",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Status Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/status",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "status"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "List Webhooks Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v2/webhooks",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v2",
+                        "webhooks"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Add Webhook Endpoint",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v2/webhooks",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v2",
+                        "webhooks"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Generate Report Endpoint",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v2/reports/generate",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v2",
+                        "reports",
+                        "generate"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Get Tool Templates Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v2/tools/templates",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v2",
+                        "tools",
+                        "templates"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Get Available Tools",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/tools",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "tools"
+                    ],
+                    "variable": [],
+                    "query": [
+                        {
+                            "key": "category",
+                            "value": ""
+                        },
+                        {
+                            "key": "available_only",
+                            "value": true
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Get Tool Details",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/tools/{tool_name}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "tools",
+                        "{tool_name}"
+                    ],
+                    "variable": [
+                        {
+                            "key": "tool_name",
+                            "value": "<tool_name>"
+                        }
+                    ],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Run Tool Endpoint",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/tools/run",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "tools",
+                        "run"
+                    ],
+                    "variable": [],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Get Job Status Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/tools/jobs/{job_id}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "tools",
+                        "jobs",
+                        "{job_id}"
+                    ],
+                    "variable": [
+                        {
+                            "key": "job_id",
+                            "value": "<job_id>"
+                        }
+                    ],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Stream Job Output Endpoint",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/tools/jobs/{job_id}/stream",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "tools",
+                        "jobs",
+                        "{job_id}",
+                        "stream"
+                    ],
+                    "variable": [
+                        {
+                            "key": "job_id",
+                            "value": "<job_id>"
+                        }
+                    ],
+                    "query": []
+                }
+            }
+        },
+        {
+            "name": "Cancel Job Endpoint",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{api_key}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/tools/jobs/{job_id}/cancel",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "tools",
+                        "jobs",
+                        "{job_id}",
+                        "cancel"
+                    ],
+                    "variable": [
+                        {
+                            "key": "job_id",
+                            "value": "<job_id>"
+                        }
+                    ],
+                    "query": []
+                }
+            }
+        }
+    ]
 }

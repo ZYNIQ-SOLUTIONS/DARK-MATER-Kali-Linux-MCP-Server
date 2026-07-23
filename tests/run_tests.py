@@ -151,7 +151,7 @@ class TestRunner:
             
             result = subprocess.run([
                 sys.executable, str(test_file)
-            ], capture_output=True, text=True, timeout=60, env=env)
+            ], capture_output=True, encoding='utf-8', timeout=60, env=env)
             
             os.chdir(original_cwd)
             
